@@ -1,0 +1,44 @@
+I may need to convert all of my doubles to floats for the code to work with processing. This might be a pain.
+
+I need to use standard java library functions to recreate Golan’s interface for specifying function input values.
+
+
+2/2/2015:
+
+The plan:
+I need to get the interface working.
+
+Get 1 function working.
+Create a string that represents the source code of the function.
+Allow the tool to correctly form and write one function.
+
+
+Once this works, it is a matter of mechanically getting the rest of the functions to work.
+
+I have gotten the builtin functions and the first batch of functions to compile.
+
+1.5 hours.
+
+
+Proccessing to Java conversions:
+
+1. All methods in Proccessing are public, whereas they will need to be explicitly labeled in java.
+
+2. The java reflection getMethods() function only finds public methods.
+
+3. Proccessing is mostly float based, whereas Java assumes double types. The character 'f' needs to be appended to all number literals.
+
+Replacement rules for quick translation:
+
+"float function_" --> "public float function_"
+
+
+I need to check what to do with the arcCircles in certain functions, because they throw an error.
+
+I had to remove some troublesome '-' characters due to a character encoding issue.
+
+Fixed some incompatibilities between java compilation versions, i.e. changed (float) casts to (Float) casts.
+
+Made it so closing the tool does not close processing.
+
+Make sure to put data in the data folder, such as code txt.
