@@ -17,12 +17,12 @@ Once this works, it is a matter of mechanically getting the rest of the function
 
 I have gotten the builtin functions and the first batch of functions to compile.
 
-1.5 hours.
+
 
 
 Proccessing to Java conversions:
 
-1. All methods in Proccessing are public, whereas they will need to be explicitly labeled in java.
+1. All methods in Proccessing are public, whereas they will need to be explicitly labeled in java. This may at times lead to some strange compilation problems. When in doubt, make things public.
 
 2. The java reflection getMethods() function only finds public methods.
 
@@ -42,3 +42,9 @@ Fixed some incompatibilities between java compilation versions, i.e. changed (fl
 Made it so closing the tool does not close processing.
 
 Make sure to put data in the data folder, such as code txt.
+
+TODO:
+It would be nice if I could sort the functions by name.
+
+It would be nice to deompose all of the code out of just one applet class.
+Implement New Tabs.

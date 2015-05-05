@@ -3,25 +3,6 @@ package template.tool;
 import processing.app.Editor;
 import processing.core.*;
 
-// PATTERN MASTER
-// Golan Levin, golan@flong.com
-// Spring 2006 - March 2013
-
-/*
- * Converted into a JAVA Tool by Bryce Summers.
- * 
- * TODO : Make sure that the functions that require helper functions have their helper functions included.
- * TODO : Give the user the option of exporting the argument string only without the function code.
- */
-
-
-// Additional functions to consider: 
-// http://en.wikipedia.org/wiki/Generalised_logistic_function Richard's Curve
-// http://en.wikipedia.org/wiki/Probit_function
-
-
-// Java imports for introspection, so we know the functions' arguments. 
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,9 +10,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 
 // Imports for PDF, to save a vector graphic of the function.
@@ -41,7 +20,7 @@ import java.util.HashSet;
 // FIXME : Improve the user interface.
 // Give the user the option of injecting only a parameter comment.
 
-public class GolanSketch extends PApplet {
+public class gui_mainControls extends PApplet {
 
 
 	/**
@@ -81,21 +60,136 @@ public class GolanSketch extends PApplet {
 
 	boolean visited = false;
 	boolean bClickedInGraph = false;
-	String functionName = "";
 
-	int FUNCTIONMODE = 0;
+
+	
 	int MAX_N_float_PARAMS = 4;
 
 	DataHistoryGraph noiseHistory;
 	DataHistoryGraph cosHistory;
 	DataHistoryGraph triHistory;
+	
+	
+	// The important variables when dealing with functions.
+	int FUNCTIONMODE = 0;
+	String functionName = "";
+	public ArrayList<Method> functionMethodArraylist;
+	int nFunctionMethods;
 
 	public static Editor editor = null;
+
+	PFont Font_bold = createFont("Arial Bold", 12);
+	PFont Font_normal = createFont("Arial", 12);
+
+	// -- Export variables.
+	int go_x = 1000;
+	int go_y = 300;
+	
+	int newTab_x = 1000;
+	int newTab_y = 200;
+	
+	int comment_x = 1000;
+	int comment_y = 100;
+	
+	int comment_radius = 20;
+	int newTab_radius = 20;
+	int drawButton_radius = 50;
+		
+	boolean bool_comment = false;
+	boolean bool_newTab = true;
+	
+	
+	gui_functionSelection selector;
+	
+	public void addSelectionControls(gui_functionSelection selector)
+	{
+		this.selector = selector;
+	}
+	
+	
+	
+	class VScrollbar {
+		  int swidth, sheight;    // width and height of bar
+		  float xpos, ypos;       // x and y position of bar
+		  float spos, newspos;    // x position of slider
+		  float sposMin, sposMax; // max and min values of slider
+		  int loose;              // how loose/heavy
+		  boolean over;           // is the mouse over the slider?
+		  boolean locked;
+		  float ratio;
+
+		  VScrollbar (float xp, float yp, int sw, int sh, int l) {
+		    swidth = sw;
+		    sheight = sh;
+		    int heighttowidth = sh - sw;
+		    ratio = (float)sh / (float)heighttowidth;
+		    xpos = xp - swidth/2;
+		    ypos = yp;
+		    spos = ypos + sheight/2 - swidth/2;
+		    newspos = spos;
+		    sposMin = ypos;
+		    sposMax = ypos + sheight - swidth;
+		    loose = l;
+		  }
+
+		  void update() {
+		    if (overEvent()) {
+		      over = true;
+		    } else {
+		      over = false;
+		    }
+		    if (mousePressed && over) {
+		      locked = true;
+		    }
+		    if (!mousePressed) {
+		      locked = false;
+		    }
+		    if (locked) {
+		      newspos = constrain(mouseY-swidth/2, sposMin, sposMax);
+		    }
+		    if (abs(newspos - spos) > 1) {
+		      spos = spos + (newspos-spos)/loose;
+		    }
+		  }
+
+		  float constrain(float val, float minv, float maxv) {
+		    return min(max(val, minv), maxv);
+		  }
+
+		  boolean overEvent() {
+		    if (mouseX > xpos && mouseX < xpos+swidth &&
+		       mouseY > ypos && mouseY < ypos+sheight) {
+		      return true;
+		    } else {
+		      return false;
+		    }
+		  }
+
+		  void display() {
+		    noStroke();
+		    fill(204);
+		    rect(xpos, ypos, swidth, sheight);
+		    if (over || locked) {
+		      fill(0, 0, 0);
+		    } else {
+		      fill(102, 102, 102);
+		    }
+		    rect(xpos, spos, swidth, swidth);
+		  }
+
+		  float getPos() {
+		    // Convert spos to be values between
+		    // 0 and the total width of the scrollbar
+		    return (spos - swidth/2 - ypos)/(sheight - swidth);
+		  }
+		}
+	
+	
 	
 	//-----------------------------------------------------
 	public void keyPressed() {
 	  int nFunctions = functionMethodArraylist.size(); 
-
+	  
 	  if (key == CODED) { 
 	    if ((keyCode == UP) || (keyCode == RIGHT)) { 
 	      FUNCTIONMODE = (FUNCTIONMODE+1)%nFunctions;
@@ -108,12 +202,35 @@ public class GolanSketch extends PApplet {
 	    doSavePDF = true;
 	  }
 	  
-	  if(key == ' ')
-	  {
+	}
+	
+	// The function that sends the function data to the text editor.
+	public void export()
+	{
+		// Add a new tab if neccessary.
+		if(bool_newTab)
+		{
+			// New Tab code.
+			File f = loadFile("code.txt");
+			//editor.getSketch().addFile(f);
+						
+		}
+		
 		// Find the name of the function we are searching for.
 		int whichFunction = FUNCTIONMODE%nFunctionMethods;  
 		Method whichMethod = functionMethodArraylist.get(whichFunction); 
-		String methodName = whichMethod.getName(); 
+		String methodName = whichMethod.getName();
+		
+		// Handle comment only.
+		if(bool_comment)
+		{
+			StringBuilder output = new StringBuilder();
+			comment(output, methodName);
+			editor.insertText(output.toString());
+			return;
+		}
+		
+		
  
 		HashSet<String> functions_included = new HashSet<String>();
 		HashSet<String> helper_names = new HashSet<String>();
@@ -171,6 +288,7 @@ public class GolanSketch extends PApplet {
 			}
 		}
 		
+		
 		editor.insertText(text.toString());
 
 		/*
@@ -190,7 +308,6 @@ public class GolanSketch extends PApplet {
 		findy
 		*/
 		
-	  }
 	}
 
 	// Appends a proper usage comment to the given string builder.
@@ -382,15 +499,25 @@ public class GolanSketch extends PApplet {
 		return new File(absolutePath);
 
 	}
-
+	
+	VScrollbar scroll;
+	int selection_text_x = 500;
+	int scroll_x = selection_text_x + 320;
+	int selection_line_h = 30;
+	
 	//-----------------------------------------------------
 	public void setup() {
 	  int scrW = (int)(margin0 + bandTh + margin1 + xscale + margin0);
 	  int scrH = (int)(margin0 + bandTh + margin1 + yscale + margin2 + bandTh + margin0 + bandTh + margin0 + bandTh + margin1);
-	  size (scrW, scrH);
+	  //size (scrW, scrH);
+	  size(1200, 600);
 	  
 	  initHistories();
 	  introspect();
+	  
+	  selector = new gui_functionSelection(this);
+	  
+	  scroll = new VScrollbar(scroll_x, 0, 32, 600, 4);
 	}
 
 
@@ -402,6 +529,38 @@ public class GolanSketch extends PApplet {
 
 	int whichButton = 0; 
 	public void mousePressed() {
+		
+		
+		if(mouseInCircle(comment_x, comment_y, comment_radius))
+		{
+			bool_comment = !bool_comment;
+			return;
+		}
+		
+		if(mouseInCircle(newTab_x, newTab_y, newTab_radius))
+		{
+			bool_newTab = !bool_newTab;
+			return;
+		}
+		
+		if(mouseInCircle(go_x, go_y, drawButton_radius))
+		{
+			export();
+		}
+		
+		drawButton(newTab_x, newTab_y, newTab_radius, getBooleanString(bool_newTab));
+		text("Use New Tab?", newTab_x + newTab_radius*2, newTab_y);
+		drawButton(go_x, go_y, drawButton_radius, "Go!");
+		
+		// Function Selection.
+		if(selection_text_x - scroll.swidth*2 <= mouseX && mouseX <= scroll_x)
+		{
+			FUNCTIONMODE = constrain((mouseY + selection_line_h/2 - getSelectionYStart()) / selection_line_h, 0, nFunctionMethods);
+			return;
+		}
+			
+		
+		
 	  bClickedInGraph = false;
 	  if ((mouseX >= xoffset) && (mouseX <= (xoffset + xscale)) && 
 	    (mouseY >= yoffset) && (mouseY <= (yoffset + yscale))) {
@@ -522,6 +681,108 @@ public class GolanSketch extends PApplet {
 	//-----------------------------------------------------
 	public void draw() {
 
+
+		mainDraw();
+
+		selectDraw();
+		
+		drawExports();
+	}
+	
+	public void drawExports()
+	{
+		
+
+		
+		drawButton(comment_x, comment_y, comment_radius, getBooleanString(bool_comment));
+		text("Comment Only?", comment_x + comment_radius*2, comment_y);
+		drawButton(newTab_x, newTab_y, newTab_radius, getBooleanString(bool_newTab));
+		text("Use New Tab?", newTab_x + newTab_radius*2, newTab_y);
+		drawButton(go_x, go_y, drawButton_radius, "Go!");
+	}
+	
+	public String getBooleanString(boolean val)
+	{
+		return val ? "Yes" : "No";
+	}
+	
+	public void drawButton(int x, int y, int radius, String message)
+	{
+		radius = radius*2;
+		fill(0);
+		ellipse(x, y, radius, radius);
+		if(mouseInCircle(x, y, radius/2))
+		{
+			fill(255, 0, 00);
+		}
+		else
+		{
+			fill(0, 255, 00);						
+		}
+		ellipse(x, y, radius-4, radius-4);
+		
+		
+		textAlign(CENTER, CENTER);
+		
+		fill(0);
+		text(message, x, y);
+		textAlign(LEFT, UP);
+		
+		
+
+	}
+	
+	public boolean mouseInCircle(int x, int y, int radius)
+	{
+		int dx = x - mouseX;
+		int dy = y - mouseY;
+		return dx*dx + dy*dy < radius*radius;
+	}
+	
+	public void selectDraw()
+	{
+		if(selector == null)
+		{
+			return;
+		}
+		
+		fill(0);
+			
+			
+		int y = getSelectionYStart();
+		int index = 0;
+		for(gui_functionSelection.listButton b: selector.button_list)
+		{
+			if(index == FUNCTIONMODE)
+			{
+				textFont(Font_bold);
+			}
+			else
+			{
+				textFont(Font_normal);
+			}
+
+		  	//textSize(32);
+		   	text(b.function_name, selection_text_x, y);
+		   	y += selection_line_h;
+		   	//println("Printing text on screen : " + b.function_name);
+		   	
+		   	index++;
+		}		
+		
+		scroll.update();
+		scroll.display();
+	}
+	
+
+	
+	public int getSelectionYStart()
+	{
+		return (int) (70 - selection_line_h*(functionMethodArraylist.size() - 12)*scroll.getPos());
+	}
+	
+	public void mainDraw()
+	{
 	  updateParameters(); 
 
 	  if (doSavePDF) {
@@ -1103,9 +1364,6 @@ public class GolanSketch extends PApplet {
 	// Method.invoke(..) // allows calling of a function!
 	// String rts = m.getReturnType().toString(); // assumed to be float, for us.
 
-	ArrayList<Method> functionMethodArraylist; 
-	int nFunctionMethods;
-
 	void introspect() {
 	  // Examine the current class, extract the names of the functions,  
 	  // then compile an ArrayList containing all the shaper functions. 
@@ -1131,7 +1389,7 @@ public class GolanSketch extends PApplet {
 	        String methodName = m.getName();
 	        
 	        if (methodName.startsWith ("function_")) { 
-	          println ('"' + methodName + '"'); 
+	          //println ('"' + methodName + '"'); 
 	          funcCount++;
 	          functionMethodArraylist.add(m);
 	        }
@@ -1591,6 +1849,7 @@ public class GolanSketch extends PApplet {
 	}
 
 
+	// FIXME : Quadratic Bezier Staircases have a bug that causes discontinuities.
 	//------------------------------------------------------------------
 	public float function_QuadraticBezierStaircase (float x, float a, int n) {
 	  functionName = "Quadratic Bezier Staircase";
@@ -2963,7 +3222,6 @@ public class GolanSketch extends PApplet {
 	float m_Centerx;
 	float m_Centery;
 	float m_dRadius;
-
 
 	//==============================================================
 	public float function_CircularArcThroughAPoint (float x, float a, float b){
