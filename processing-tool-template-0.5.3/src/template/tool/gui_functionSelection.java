@@ -32,7 +32,7 @@ public class gui_functionSelection
 	// A Class that displays a set of list buttons.
 	public class FunctionList implements Iterable<listButton>
 	{
-		LinkedHashSet<listButton> myListButtons = new LinkedHashSet<listButton>();
+		public ArrayList<listButton> myListButtons = new ArrayList<listButton>();
 		
 		public void addFunction(int index, String message)
 		{

@@ -18,7 +18,7 @@ Once this works, it is a matter of mechanically getting the rest of the function
 I have gotten the builtin functions and the first batch of functions to compile.
 
 
-
+I had to reinstall and configure an ANT build system, including filling out the script files in order to get the processing build system to work correctly.
 
 Proccessing to Java conversions:
 
@@ -46,5 +46,16 @@ Make sure to put data in the data folder, such as code txt.
 TODO:
 It would be nice if I could sort the functions by name.
 
-It would be nice to deompose all of the code out of just one applet class.
+It would be nice to decompose all of the code out of just one applet class.
 Implement New Tabs.
+
+
+
+building the code.
+------------------
+Make sure any other programs such as proccessing are closed.
+Copy the code from src/template/tool to proccessing-tooltemplate-0.5.3/src/template/tool
+
+Run the Ant build script from within Eclipse.
+You should make sure the build script should be configured to send the built tool to the tools folder of your installed processing 3 environment.
+The Newly modified tool should be fit for testing and use within processing 3.

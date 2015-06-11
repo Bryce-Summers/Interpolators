@@ -1,6 +1,7 @@
 package template.tool;
 
 import processing.app.Editor;
+import processing.app.Sketch;
 import processing.core.*;
 
 import java.io.BufferedReader;
@@ -12,6 +13,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 
 // Imports for PDF, to save a vector graphic of the function.
 //import processing.pdf.*;
@@ -65,9 +67,9 @@ public class gui_mainControls extends PApplet {
 	
 	int MAX_N_float_PARAMS = 4;
 
-	DataHistoryGraph noiseHistory;
+	//DataHistoryGraph noiseHistory;
 	DataHistoryGraph cosHistory;
-	DataHistoryGraph triHistory;
+	//DataHistoryGraph triHistory;
 	
 	
 	// The important variables when dealing with functions.
@@ -83,35 +85,145 @@ public class gui_mainControls extends PApplet {
 
 	// -- Export variables.
 	int go_x = 1000;
-	int go_y = 300;
+	int go_y = 350;
 	
 	int newTab_x = 1000;
-	int newTab_y = 200;
+	int newTab_y = 250;
 	
 	int comment_x = 1000;
-	int comment_y = 100;
+	int comment_y = 200;
+	
+	int clamp_x = 1000;
+	int clamp_y = 150;
+	
+	int flipX_x = 1000;
+	int flipX_y = 50;
+	
+	int flipY_x = 1000;
+	int flipY_y = 100;
 	
 	int comment_radius = 20;
 	int newTab_radius = 20;
+	int clamp_radius = 20;
+	int flipX_radius = 20;
+	int flipY_radius = 20;
 	int drawButton_radius = 50;
 		
 	boolean bool_comment = false;
 	boolean bool_newTab = true;
+	boolean bool_clamp = false;
+	boolean bool_flipX = false;
+	boolean bool_flipY = false;
 	
+	f_group[] function_groups;
+	int group_index = 0;
 	
 	gui_functionSelection selector;
+	
+	gui_mainControls me = this;
 	
 	public void addSelectionControls(gui_functionSelection selector)
 	{
 		this.selector = selector;
 	}
 	
-	
+	class f_group implements Iterable<Integer>
+	{
+		ArrayList<Integer> indices = new ArrayList<Integer>();
+		
+		int x, y;
+		int w, h;
+		
+		Method method;
+		Object[] inputs;
+		int myIndex = -1;
+		
+		String name = "";
+		
+		public f_group(int x, int y, int w, int h, int index)
+		{
+			this.x = x;
+			this.y = y;
+			this.w = w;
+			this.h = h;	
+			this.myIndex = index;
+		}
+		
+		public void addIndice(int i)
+		{
+			indices.add(i);
+		}
+		
+		public boolean mouseIn()
+		{
+			return	x <= mouseX && mouseX <= x + w &&
+					y <= mouseY && mouseY <= y + h;
+		}
+		
+		public Iterator<Integer> iterator()
+		{
+			return indices.iterator();
+		}
+		
+		public void draw()
+		{
+			if(mouseIn())
+			{
+				fill(0, 255, 255);
+			}
+			else
+			{
+				fill(255);
+			}
+			
+			for(int i = 0; i < w; i++)
+			{
+				//line(i, functionMethodArraylist.get(i));
+			}
+			
+			rect(x, y, w, h);
+			
+			fill(0);
+			text(name, x + 10, y + h/2);
+		}
+
+		public void mouseP() 
+		{
+			
+			group_index = myIndex;
+			
+			// Reset the position of the vertical scrollbar.
+			float  spos    = scroll.ypos;
+			scroll.spos    = spos;
+			scroll.newspos = spos;
+		}
+
+		public int size() 
+		{
+			return indices.size();
+		}
+
+		public int get(int index)
+		{
+			if(index < 0 || index > indices.size())
+			{
+				return 0;
+			}
+			
+			return indices.get(index);
+		}
+
+		public void name(String string)
+		{
+			this.name = string;
+		}
+		
+	}
 	
 	class VScrollbar {
 		  int swidth, sheight;    // width and height of bar
 		  float xpos, ypos;       // x and y position of bar
-		  float spos, newspos;    // x position of slider
+		  float spos, newspos;    // y position of slider
 		  float sposMin, sposMax; // max and min values of slider
 		  int loose;              // how loose/heavy
 		  boolean over;           // is the mouse over the slider?
@@ -179,7 +291,7 @@ public class gui_mainControls extends PApplet {
 
 		  float getPos() {
 		    // Convert spos to be values between
-		    // 0 and the total width of the scrollbar
+		    // 0 and the total height of the scrollbar
 		    return (spos - swidth/2 - ypos)/(sheight - swidth);
 		  }
 		}
@@ -211,9 +323,9 @@ public class gui_mainControls extends PApplet {
 		if(bool_newTab)
 		{
 			// New Tab code.
-			File f = loadFile("code.txt");
-			//editor.getSketch().addFile(f);
-						
+			Sketch sketch = editor.getSketch();
+			sketch.handleNewCode();
+
 		}
 		
 		// Find the name of the function we are searching for.
@@ -329,22 +441,22 @@ public class gui_mainControls extends PApplet {
 		
 		output.append("input");
 		
-		if(num_args >= 1)
+		if(num_args >= 2)
 		{
 			output.append(", " + param_a);	
 		}
 		
-		if(num_args >= 2)
+		if(num_args >= 3)
 		{
 			output.append(", " + param_b);	
 		}
 		
-		if(num_args >= 3)
+		if(num_args >= 4)
 		{
 			output.append(", " + param_c);	
 		}
 		
-		if(num_args >= 4)
+		if(num_args >= 5)
 		{
 			output.append(", " + param_d);	
 		}
@@ -414,7 +526,8 @@ public class gui_mainControls extends PApplet {
 				}
 			}
 			
-			
+			// Remove all Tabs.
+			str = str.replace("\t", "");
 			output.append(str);
 			// New Line characters.
 			output.append("\n");
@@ -503,7 +616,7 @@ public class gui_mainControls extends PApplet {
 	VScrollbar scroll;
 	int selection_text_x = 500;
 	int scroll_x = selection_text_x + 320;
-	int selection_line_h = 30;
+	int selection_line_h = 20;
 	
 	//-----------------------------------------------------
 	public void setup() {
@@ -518,9 +631,117 @@ public class gui_mainControls extends PApplet {
 	  selector = new gui_functionSelection(this);
 	  
 	  scroll = new VScrollbar(scroll_x, 0, 32, 600, 4);
+	  
+	  setupGroups();
 	}
-
-
+	
+	public void setupGroups()
+	{
+		  function_groups = new f_group[12];
+		  
+		  for(int i = 0; i < function_groups.length; i++)
+		  {
+			  function_groups[i] = new f_group(selection_text_x - 100, i*50, 90, 40, i);
+		  }
+		  
+		  function_groups[0].name("All");
+		  function_groups[1].name("sigmoid");
+		  function_groups[2].name("ogee");
+		  function_groups[3].name("easeIn");
+		  function_groups[4].name("easeOut");
+		  function_groups[5].name("penner");
+		  function_groups[6].name("gaussian");
+		  function_groups[7].name("bezier");		  
+		  function_groups[8].name("staircase");
+		  function_groups[9].name("windows");
+		  function_groups[10].name("half");
+		  function_groups[11].name("other");
+		  		  
+		  
+		  
+		  int len = functionMethodArraylist.size();
+		  for(int i = 0; i < len; i++)
+		  {
+			  Method m = functionMethodArraylist.get(i);
+			  
+			  String name = m.getName().toLowerCase();
+			  
+			  // All.
+			  function_groups[0].addIndice(i);
+			  
+			  boolean found = false;
+			  
+			  if(name.contains("sigmoid"))
+			  {
+				  function_groups[1].addIndice(i);
+				  found = true;
+			  }
+			  
+			  if(name.contains("ogee"))
+			  {
+				  function_groups[2].addIndice(i);
+				  found = true;
+			  }
+			  
+			  if(name.contains("ease") && name.contains("in"))
+			  {
+				  System.out.println(name);
+				  function_groups[3].addIndice(i);
+				  found = true;
+			  }
+			  
+			  if(name.contains("ease") && name.contains("out"))
+			  {
+				  function_groups[4].addIndice(i);
+				  found = true;
+			  }
+			  
+			  if(name.contains("penner"))
+			  {
+				  function_groups[5].addIndice(i);
+				  found = true;
+			  }
+			  
+			  if(name.contains("gaussian"))
+			  {
+				  function_groups[6].addIndice(i);
+				  found = true;
+			  }
+			  
+			  if(name.contains("bezier"))
+			  {
+				  function_groups[7].addIndice(i);
+				  found = true;
+			  }
+			  
+			  if(name.contains("staircase"))
+			  {
+				  function_groups[8].addIndice(i);
+				  found = true;
+			  }
+			  
+			  if(name.contains("window"))
+			  {
+				  function_groups[9].addIndice(i);
+				  found = true;
+			  }
+			  
+			  if(name.contains("half"))
+			  {
+				  function_groups[10].addIndice(i);
+				  found = true;
+			  }
+			  
+			  			  
+			  if(!found)
+			  {
+				  function_groups[11].addIndice(i);
+			  }			  
+			  
+			  
+		  }
+	}
+	
 
 	//-----------------------------------------------------
 	public void mouseMoved() {
@@ -530,6 +751,12 @@ public class gui_mainControls extends PApplet {
 	int whichButton = 0; 
 	public void mousePressed() {
 		
+		
+		for(f_group g : function_groups)
+		{
+			if(g.mouseIn())
+			g.mouseP();
+		}
 		
 		if(mouseInCircle(comment_x, comment_y, comment_radius))
 		{
@@ -543,9 +770,24 @@ public class gui_mainControls extends PApplet {
 			return;
 		}
 		
+		if(mouseInCircle(clamp_x, clamp_y, clamp_radius))
+		{
+			bool_clamp = !bool_clamp;
+		}
+		
 		if(mouseInCircle(go_x, go_y, drawButton_radius))
 		{
 			export();
+		}
+		
+		if(mouseInCircle(flipX_x, flipX_y, flipX_radius))
+		{
+			bool_flipX = !bool_flipX;
+		}
+		
+		if(mouseInCircle(flipY_x, flipY_y, flipY_radius))
+		{
+			bool_flipY = !bool_flipY;
 		}
 		
 		drawButton(newTab_x, newTab_y, newTab_radius, getBooleanString(bool_newTab));
@@ -555,7 +797,12 @@ public class gui_mainControls extends PApplet {
 		// Function Selection.
 		if(selection_text_x - scroll.swidth*2 <= mouseX && mouseX <= scroll_x)
 		{
-			FUNCTIONMODE = constrain((mouseY + selection_line_h/2 - getSelectionYStart()) / selection_line_h, 0, nFunctionMethods);
+			f_group group = function_groups[group_index];
+			FUNCTIONMODE = constrain((mouseY + selection_line_h/2 - getSelectionYStart()) / selection_line_h,
+										0, group.size() - 1);
+			// FUNCTIONMODE = 
+			FUNCTIONMODE = group.get(FUNCTIONMODE);
+			
 			return;
 		}
 			
@@ -692,10 +939,18 @@ public class gui_mainControls extends PApplet {
 	public void drawExports()
 	{
 		
-
+		drawButton(flipX_x, flipX_y, flipX_radius, getBooleanString(bool_flipX));
+		text("Flip X?", flipX_x + flipX_radius*2, flipX_y);
+		
+		drawButton(flipY_x, flipY_y, flipY_radius, getBooleanString(bool_flipY));
+		text("Flip Y?", flipY_x + flipY_radius*2, flipY_y);
 		
 		drawButton(comment_x, comment_y, comment_radius, getBooleanString(bool_comment));
 		text("Comment Only?", comment_x + comment_radius*2, comment_y);
+		
+		drawButton(clamp_x, clamp_y, clamp_radius, getBooleanString(bool_clamp));
+		text("Clamp Output?", clamp_x + clamp_radius*2, clamp_y);
+		
 		drawButton(newTab_x, newTab_y, newTab_radius, getBooleanString(bool_newTab));
 		text("Use New Tab?", newTab_x + newTab_radius*2, newTab_y);
 		drawButton(go_x, go_y, drawButton_radius, "Go!");
@@ -741,6 +996,11 @@ public class gui_mainControls extends PApplet {
 	
 	public void selectDraw()
 	{
+		for(f_group g : function_groups)
+		{
+			g.draw();
+		}
+		
 		if(selector == null)
 		{
 			return;
@@ -750,9 +1010,13 @@ public class gui_mainControls extends PApplet {
 			
 			
 		int y = getSelectionYStart();
-		int index = 0;
-		for(gui_functionSelection.listButton b: selector.button_list)
+
+		f_group group = function_groups[group_index];
+		
+		for(Integer index : group)
 		{
+			gui_functionSelection.listButton b = selector.button_list.myListButtons.get(index);
+			
 			if(index == FUNCTIONMODE)
 			{
 				textFont(Font_bold);
@@ -772,13 +1036,17 @@ public class gui_mainControls extends PApplet {
 		
 		scroll.update();
 		scroll.display();
+		
+		textFont(Font_normal);
 	}
 	
 
 	
 	public int getSelectionYStart()
 	{
-		return (int) (70 - selection_line_h*(functionMethodArraylist.size() - 12)*scroll.getPos());
+		double spos = Math.max(0, scroll.getPos());
+		int val = (int)(spos*selection_line_h*(function_groups[group_index].size() - 12));
+				return 20 - val;
 	}
 	
 	public void mainDraw()
@@ -1028,9 +1296,9 @@ public class gui_mainControls extends PApplet {
 	//-----------------------------------------------------
 	void initHistories() {
 
-	  noiseHistory = new DataHistoryGraph ((int)xscale);
+	  //noiseHistory = new DataHistoryGraph ((int)xscale);
 	  cosHistory   = new DataHistoryGraph ((int)xscale);
-	  triHistory   = new DataHistoryGraph ((int)xscale);
+	  //triHistory   = new DataHistoryGraph ((int)xscale);
 	}
 
 
@@ -1038,27 +1306,29 @@ public class gui_mainControls extends PApplet {
 	void drawNoiseHistories() {
 
 	  // update with the latest incoming values
-	  int nData = (int)xscale;
-	  float noiseVal = noise(millis()/ (nData/2.0f));
-	  float cosVal   = 0.5f + (0.45f * cos(PI * millis()/animationConstant));
+	  //int nData = (int)xscale;
+	  //float noiseVal = noise(millis()/ (nData/2.0f));
+	  float cosVal   = 0.5f + (0.5f * cos(PI * millis()/animationConstant));
 	  
 	  float ac = animationConstant;
 	  
-	  float tv = (((int)(millis()/ac))%2 == 0) ? (millis()%ac) : (ac - (millis()%ac));
-	  float triVal = 1.0f - tv/ac;
+	  //float tv = (((int)(millis()/ac))%2 == 0) ? (millis()%ac) : (ac - (millis()%ac));
+	  //float triVal = 1.0f - tv/ac;
 	  
 	  
-	  noiseHistory.update( noiseVal ); 
+	  //noiseHistory.update( noiseVal ); 
 	  cosHistory.update  ( cosVal );  
-	  triHistory.update  ( triVal ); 
+	  //triHistory.update  ( triVal ); 
 
 	  float nhy = margin0 + bandTh + margin1 + yscale + margin2;
 	  
+	  /*
 	  noiseHistory.draw ( xoffset, nhy); 
-	  nhy += (bandTh + margin1); 
+	  nhy += (bandTh + margin1);
+	  */ 
 	  cosHistory.draw   ( xoffset, nhy);
 	  nhy += (bandTh + margin1); 
-	  triHistory.draw   ( xoffset, nhy);
+	  //triHistory.draw   ( xoffset, nhy);
 	}
 
 
@@ -1859,8 +2129,18 @@ public class gui_mainControls extends PApplet {
 	    return x;
 	  }
 
+	  /* Skyscraper function.
 	  float x0 = (floor (x*n))/ (float) n; 
-	  float x1 = (ceil  (x*n))/ (float) n;
+	  float x1 = (ceil (x*n))/ (float) n;
+	  
+	  
+	  float y0 = x0; 
+	  float y1 = (floor((x + x/n)*n))/ (float) n;
+	  */
+	  
+	  float x0 = (floor (x*n))/ (float) n;
+	  float x1 = (ceil (x*n))/ (float) n;
+	  	  
 	  float y0 = x0; 
 	  float y1 = x1; 
 
