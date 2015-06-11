@@ -41,3 +41,7 @@ Usage Notes
 It the tool every seems to not be drawing properly in the Graphic User Interface Window, then please try resizing the window and the drawing should go back to normal.
 
 Make sure you have written the setup() and/or draw() function, or Proccessing 3.0 will tell you a weird error story about the left and right Parentheses in the interpolation curves functions. ('(' annd ')').
+
+
+Draw the Mouse with the left or right arrow keys to manipulate parameters.
+Use the Scroll Wheen to modify the value of parameter 'n'.
