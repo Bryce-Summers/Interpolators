@@ -6,11 +6,11 @@ Please see: https://github.com/golanlevin/Pattern_Master
 Current Status
 ============
 
-Almost Done.
+In the User Interface Refinement phase.
 
 Functional Visualization:
 ----------
-Done, may need some redesign.
+
 
 Selection of Functions
 ------------
@@ -27,5 +27,5 @@ Current Visual appearance
 
 
 
-![alt text](https://github.com/Bryce-Summers/Interpolators/blob/master/Screenshots/interpolators_screenshot2.png "Visual Appearance, 5/4/2015")
+![alt text](https://github.com/Bryce-Summers/Interpolators/blob/master/Screenshots/ScreenShot6-12-2015.png "Visual Appearance, 6/12/2015")
 
