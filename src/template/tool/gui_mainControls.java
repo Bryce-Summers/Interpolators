@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -39,7 +41,7 @@ public class gui_mainControls extends PApplet {
 	boolean bDrawModeSpecificGraphics = true;
 	boolean bDrawAnimatingRadiusCircle = true;
 
-	int boundingBoxStrokeColor = color(180); 
+	int boundingBoxStrokeColor = color(180);
 
 	//-----------------------------------------------------
 	float xscale = 300;
@@ -49,7 +51,7 @@ public class gui_mainControls extends PApplet {
 	float margin1 = 5;
 	float margin2 = 90;
 	float xoffset = margin0 + bandTh + margin1 + 500;
-	float yoffset = margin0 + bandTh + margin1;
+	float yoffset = margin0 + bandTh + margin1 + 60;
 	float xoffset2 = xoffset - 90; 
 	
 	
@@ -77,7 +79,7 @@ public class gui_mainControls extends PApplet {
 	
 	
 	// The important variables when dealing with functions.
-	int FUNCTIONMODE = 0;
+	int FUNCTIONMODE = 0;// The index of the current function???
 	String functionName = "";
 	public ArrayList<Method> functionMethodArraylist;
 	int nFunctionMethods;
@@ -90,28 +92,37 @@ public class gui_mainControls extends PApplet {
 	// Bryce's Variables.
 	
 	VScrollbar scroll;
+	
+	// Horizontal Scroll Bars for the Parameters.
+	HScrollbar parameter_scroll_a;
+	HScrollbar parameter_scroll_b;
+	HScrollbar parameter_scroll_c;
+	HScrollbar parameter_scroll_d;
+	HScrollbar parameter_scroll_n;
+	
 	int selection_text_x = 110;//500;
-	int scroll_x = selection_text_x + 320;
+	int scroll_x = selection_text_x + 320 + 40;
 	int selection_line_h = 20;
+	int export_offsetY = 100;
 	
 	// -- Export variables.
-	int go_x = 1000;
-	int go_y = 350;
+	int go_x = 1000 + 50;
+	int go_y = 350 + export_offsetY;
 	
 	int newTab_x = 1000;
-	int newTab_y = 250;
+	int newTab_y = 250 + export_offsetY;
 	
 	int comment_x = 1000;
-	int comment_y = 200;
+	int comment_y = 200 + export_offsetY;
 	
 	int clamp_x = 1000;
-	int clamp_y = 150;
+	int clamp_y = 150 + export_offsetY;
 	
 	int flipX_x = 1000;
-	int flipX_y = 50;
+	int flipX_y = 50 + export_offsetY;
 	
 	int flipY_x = 1000;
-	int flipY_y = 100;
+	int flipY_y = 100 + export_offsetY;
 	
 	int comment_radius = 20;
 	int newTab_radius = 20;
@@ -147,9 +158,13 @@ public class gui_mainControls extends PApplet {
 		
 		Method method;
 		Object[] inputs;
+		// Specifies what the indice of this function group is in the global function group array.
 		int myIndex = -1;
 		
 		String name = "";
+		
+		// Specifies what the current_index is within this function group.
+		int current_index = 0;
 		
 		public f_group(int x, int y, int w, int h, int index)
 		{
@@ -202,11 +217,13 @@ public class gui_mainControls extends PApplet {
 		{
 			
 			group_index = myIndex;
-			
+
 			// Reset the position of the vertical scrollbar.
-			float  spos    = scroll.ypos;
-			scroll.spos    = spos;
-			scroll.newspos = spos;
+			scroll.setVal(0);
+			
+			current_index = 0;
+			FUNCTIONMODE = get(current_index);
+			
 		}
 
 		public int size() 
@@ -229,6 +246,25 @@ public class gui_mainControls extends PApplet {
 			this.name = string;
 		}
 		
+		// Scrolls the index up.
+		public void index_increment()
+		{
+			current_index = (current_index + 1) % indices.size();
+			FUNCTIONMODE = get(current_index);
+		}
+		
+		// Scrolls the index down.
+		public void index_decrement()
+		{
+			int len = indices.size();
+			current_index = (current_index + len - 1) % len; 
+			FUNCTIONMODE = get(current_index);
+		}
+		
+		public void index_fix()
+		{
+			FUNCTIONMODE = get(current_index);
+		}
 	}
 	
 	class VScrollbar {
@@ -255,7 +291,14 @@ public class gui_mainControls extends PApplet {
 		    loose = l;
 		  }
 
-		  void update() {
+		  public void setVal(float percentage)
+		  {
+			  float target = ypos + (sheight - swidth)*percentage;
+			  //spos = target;
+			  newspos = target;
+		  }
+
+		void update() {
 		    if (overEvent()) {
 		      over = true;
 		    } else {
@@ -307,6 +350,108 @@ public class gui_mainControls extends PApplet {
 		  }
 		}
 	
+	// Horizontal Scrollbar.
+	class HScrollbar {
+		  int swidth, sheight;    // width and height of bar
+		  float xpos, ypos;       // x and y position of bar
+		  float spos, newspos;    // x position of slider
+		  float sposMin, sposMax; // max and min values of slider
+		  int loose;              // how loose/heavy
+		  boolean over;           // is the mouse over the slider?
+		  boolean locked;
+		  float ratio;
+
+		  HScrollbar (float xp, float yp, int sw, int sh, int l) {
+		    swidth = sw;
+		    sheight = sh;
+		    int widthtoheight = sw - sh;
+		    ratio = (float)sw / (float)widthtoheight;
+		    xpos = xp;
+		    ypos = yp-sheight/2;
+		    spos = xpos + swidth/2 - sheight/2;
+		    newspos = spos;
+		    sposMin = xpos;
+		    sposMax = xpos + swidth - sheight;
+		    loose = l;
+		  }
+
+		  void update() {
+		    if (overEvent()) {
+		      over = true;
+		    } else {
+		      over = false;
+		    }
+		    if (mousePressed && over) {
+		      locked = true;
+		    }
+		    if (!mousePressed) {
+		      locked = false;
+		    }
+		    if (locked) {
+		      newspos = constrain(mouseX-sheight/2, sposMin, sposMax);
+		    }
+		    if (abs(newspos - spos) > 1) {
+		      spos = spos + (newspos-spos)/loose;
+		    }
+		  }
+
+		  float constrain(float val, float minv, float maxv) {
+		    return min(max(val, minv), maxv);
+		  }
+
+		  boolean overEvent() {
+		    if (mouseX > xpos && mouseX < xpos+swidth &&
+		       mouseY > ypos && mouseY < ypos+sheight) {
+		      return true;
+		    } else {
+		      return false;
+		    }
+		  }
+
+		  void display() {
+		    noStroke();
+		    fill(204);
+		    rect(xpos, ypos, swidth, sheight);
+		    if (over || locked) {
+		      fill(0, 0, 0);
+		    } else {
+		      fill(102, 102, 102);
+		    }
+		    rect(spos, ypos, sheight, sheight);
+		  }
+
+		  float getPos() {
+		    // Convert spos to be values between
+		    // 0 and the total width of the scrollbar
+		    return spos * ratio;
+		  }
+		  
+		  float getVal(float range)
+		  {
+			  float output = (spos - sposMin) / (swidth - sheight)*range;
+			  
+			  if(output < .01)
+			  {
+				  return 0.0f;
+			  }
+			  
+			  if(output > range - .01)
+			  {
+				  return range;
+			  }
+			  
+			  return output;
+		  }
+		  
+		  public void setVal(float percentage)
+		  {
+			  float target = xpos + (swidth - sheight)*percentage;
+			  //spos = target;
+			  newspos = target;
+		  }
+		}
+
+
 	
 	
 	//-----------------------------------------------------
@@ -314,10 +459,10 @@ public class gui_mainControls extends PApplet {
 	  int nFunctions = functionMethodArraylist.size(); 
 	  
 	  if (key == CODED) { 
-	    if ((keyCode == UP) || (keyCode == RIGHT)) { 
+	    if ((keyCode == DOWN) || (keyCode == RIGHT)) { 
 	      FUNCTIONMODE = (FUNCTIONMODE+1)%nFunctions;
 	    } 
-	    else if ((keyCode == DOWN) || (keyCode == LEFT)) { 
+	    else if ((keyCode == UP) || (keyCode == LEFT)) { 
 	      FUNCTIONMODE = (FUNCTIONMODE-1+nFunctions)%nFunctions;
 	    }
 	  } 
@@ -445,6 +590,12 @@ public class gui_mainControls extends PApplet {
 		// Detects whether we should add a comment string with the arguments.
 		boolean hasArgs = num_args > 0 || hasFinalIntArg;
 		
+		// Don't count the final n value as a regular argument.
+		if(hasFinalIntArg)
+		{
+			num_args--;
+		}
+		
 		if(hasArgs)
 		{
 			output.append("//" + function_name + "(");
@@ -496,6 +647,9 @@ public class gui_mainControls extends PApplet {
 		if(initial_function)
 		{
 			comment(output, function_name);
+			
+			
+			
 		}
 				
 		
@@ -536,12 +690,63 @@ public class gui_mainControls extends PApplet {
 					dependancies.add(helper_name);
 				}
 			}
-			
+
 			// Remove all Tabs.
 			str = str.replace("\t", "");
-			output.append(str);
-			// New Line characters.
-			output.append("\n");
+
+			// -- Handle mutated and literal translation of code.
+			
+			String[] flipY_split = str.split("return");
+			
+			// Flip Outputs (Flip Y).
+			if(initial_function && (bool_flipY || bool_clamp) && flipY_split.length >= 2)
+			{				
+
+				flipY_split[1] = flipY_split[1].replace(";", "");
+				str = flipY_split[1];
+								
+				// Perform the transformations.
+				if(bool_flipY)
+				{
+					str =  "1 -(" + str + ")";
+				}
+
+				if(bool_clamp)
+				{
+					str = "constrain(" + str +", 0, 1)";
+				}
+				
+				// Reconstruct a well formed return statement.
+				String prefix = flipY_split[0];// Whitespace mostly.
+				output.append(prefix + "return " + str + ";\n");
+				
+			}
+			// Flip Input (Flip X)
+			else if(initial_function && bool_flipX && leftP == 0)
+			{
+				// Append the Function call.
+				output.append(str);
+				// New Line characters.
+				output.append("\n");
+				
+				// Chop off the left.
+				String parameter_name = str.split("\\(")[1];
+				
+				// Chop off the right.
+				parameter_name = parameter_name.split(",|\\)")[0];
+				
+				parameter_name = parameter_name.replace("float", "");
+				parameter_name = parameter_name.replace(" ", "");
+				
+				// Append the input flipping code.
+				output.append("  " + parameter_name + " = " + "1 - " + parameter_name + ";\n");
+			}
+			else // Append the unaltered code string.
+			{
+				output.append(str);
+				// New Line characters.
+				output.append("\n");
+			}
 			
 			// Count them parenthesis and keep a positive attitude.
 			leftP += str.length() - str.replace("{", "").length();
@@ -633,13 +838,56 @@ public class gui_mainControls extends PApplet {
 	  size(1200, 600);
 	  
 	  initHistories();
+	  
 	  introspect();
 	  
 	  selector = new gui_functionSelection(this);
 	  
-	  scroll = new VScrollbar(scroll_x, 0, 32, 600, 4);
+	  setup_scrollbars();	  
 	  
 	  setupGroups();
+	}
+	
+	public void setup_scrollbars()
+	{
+		scroll = new VScrollbar(scroll_x, 0, 32, 600, 4);
+		scroll.setVal(0);
+		
+		int x = (int) xoffset + 100;
+		int y = (int) (yoffset + 320);
+		int width  = 200;
+		int height = 10;
+		int l = 4;
+		
+		int y_inc = 15;
+		
+		parameter_scroll_a = new HScrollbar(x, y, width, height, l);
+		y += y_inc;
+		
+		parameter_scroll_b = new HScrollbar(x, y, width, height, l);
+		y += y_inc;
+		
+		parameter_scroll_c = new HScrollbar(x, y, width, height, l);
+		y += y_inc;
+		
+		parameter_scroll_d = new HScrollbar(x, y, width, height, l);
+		y += y_inc;
+		
+		parameter_scroll_n = new HScrollbar(x, y, width, height, l);
+		y += y_inc;
+		
+		
+	}
+	
+	// Orders Methods based on thier name strings.
+	class MethodComparator implements Comparator<Method> {
+	    @Override
+	    public int compare(Method m1, Method m2) {
+	    	String name1 = m1.getName().toLowerCase();
+	    	String name2 = m2.getName().toLowerCase();
+	    	
+	        return name1.compareTo(name2);
+	    }
 	}
 	
 	public void setupGroups()
@@ -652,20 +900,23 @@ public class gui_mainControls extends PApplet {
 		  }
 		  
 		  function_groups[0].name("All");
-		  function_groups[1].name("sigmoid");
-		  function_groups[2].name("ogee");
-		  function_groups[3].name("easeIn");
-		  function_groups[4].name("easeOut");
-		  function_groups[5].name("penner");
-		  function_groups[6].name("gaussian");
-		  function_groups[7].name("bezier");		  
-		  function_groups[8].name("staircase");
-		  function_groups[9].name("windows");
-		  function_groups[10].name("half");
-		  function_groups[11].name("other");
+		  function_groups[1].name("Sigmoid");
+		  function_groups[2].name("Ogee");
+		  function_groups[3].name("EaseIn");
+		  function_groups[4].name("EaseOut");
+		  function_groups[5].name("Penner");
+		  function_groups[6].name("Gaussian");
+		  function_groups[7].name("Bezier");		  
+		  function_groups[8].name("Staircase");
+		  function_groups[9].name("Windows");
+		  function_groups[10].name("Half");
+		  function_groups[11].name("Other");
+
+		  // Sort the functions by their name strings.
+		  // It is quite mysterious how the list of methods needs to be sorted in multiple locations.
+		  // This could possible be investigated...
+		  Collections.sort(functionMethodArraylist, new MethodComparator());
 		  		  
-		  
-		  
 		  int len = functionMethodArraylist.size();
 		  for(int i = 0; i < len; i++)
 		  {
@@ -747,8 +998,17 @@ public class gui_mainControls extends PApplet {
 			  
 			  
 		  }
+		  
+		  
+		  // Setup the global variables correctly.
+		  fixFUNCTIONMODE();
 	}
 	
+	public void fixFUNCTIONMODE()
+	{
+		// Synchronize the globlal index with the correct index.
+		function_groups[group_index].index_fix();		
+	}
 
 	//-----------------------------------------------------
 	public void mouseMoved() {
@@ -759,9 +1019,33 @@ public class gui_mainControls extends PApplet {
 	public void mouseWheel(MouseEvent event)
 	{
 		  float e = event.getCount();
-		  f_n += e;
 		  
+		  // In Selection Bounds.
+		  if(inFunctionSelectionBounds())
+		  {
+			
+			int up = ceil(e);
+			  
+			while(up > 0)
+			{
+				function_groups[group_index].index_increment();
+				up--;
+			}
+			
+			int down = ceil(-e);
+			
+			while(down > 0)
+			{
+				function_groups[group_index].index_decrement();
+				down--;
+			}
+			return;
+		  }
+		  
+		  f_n -= e;
+		  f_n = constrain(f_n, 1, 10);
 		  param_n = (int)f_n;
+		  parameter_scroll_n.setVal((param_n -1)/9.0f);
 
 	}
 	
@@ -813,8 +1097,8 @@ public class gui_mainControls extends PApplet {
 		text("Use New Tab?", newTab_x + newTab_radius*2, newTab_y);
 		drawButton(go_x, go_y, drawButton_radius, "Go!");
 		
-		// Function Selection.
-		if(selection_text_x - scroll.swidth*2 <= mouseX && mouseX <= scroll_x)
+		// Function Selection Bounds checking mouse pressing code.
+		if(inFunctionSelectionBounds())
 		{
 			f_group group = function_groups[group_index];
 			FUNCTIONMODE = constrain((mouseY + selection_line_h/2 - getSelectionYStart()) / selection_line_h,
@@ -850,7 +1134,12 @@ public class gui_mainControls extends PApplet {
 	  
 	}
 
-
+// Determines the x region of the screen that cooresponds to the list of functions.
+// This function will be used to determine if mouse presses fall in that region.
+boolean inFunctionSelectionBounds()
+{
+	return selection_text_x <= mouseX && mouseX <= scroll_x - 30;
+}
 
 	//====================================================
 	void drawPDF() {
@@ -968,7 +1257,7 @@ public class gui_mainControls extends PApplet {
 		text("Comment Only?", comment_x + comment_radius*2, comment_y);
 		
 		drawButton(clamp_x, clamp_y, clamp_radius, getBooleanString(bool_clamp));
-		text("Clamp Output?", clamp_x + clamp_radius*2, clamp_y);
+		text("Constrain Output?", clamp_x + clamp_radius*2, clamp_y);
 		
 		drawButton(newTab_x, newTab_y, newTab_radius, getBooleanString(bool_newTab));
 		text("Use New Tab?", newTab_x + newTab_radius*2, newTab_y);
@@ -1046,7 +1335,7 @@ public class gui_mainControls extends PApplet {
 			}
 
 		  	//textSize(32);
-		   	text(b.function_name, selection_text_x, y);
+		   	text(b.function_name + "()", selection_text_x, y);
 		   	y += selection_line_h;
 		   	//println("Printing text on screen : " + b.function_name);
 		   	
@@ -1055,11 +1344,27 @@ public class gui_mainControls extends PApplet {
 		
 		scroll.update();
 		scroll.display();
+				
+		handleHScrollbar(parameter_scroll_a);
+		param_a = parameter_scroll_a.getVal(1.0f);
+		handleHScrollbar(parameter_scroll_b);
+		param_b = parameter_scroll_b.getVal(1.0f);
+		handleHScrollbar(parameter_scroll_c);
+		param_c = parameter_scroll_c.getVal(1.0f);
+		handleHScrollbar(parameter_scroll_d);
+		param_d = parameter_scroll_d.getVal(1.0f);
+		handleHScrollbar(parameter_scroll_n);
+		param_n = (int)(parameter_scroll_n.getVal(10.0f) + 1);
 		
 		textFont(Font_normal);
 	}
 	
-
+	void handleHScrollbar(HScrollbar H)
+	{
+		H.update();
+		H.display();
+	}
+	
 	
 	public int getSelectionYStart()
 	{
@@ -1129,6 +1434,9 @@ public class gui_mainControls extends PApplet {
 	        param_b = 1-(float)(mouseY - yoffset)/yscale;
 	        param_a = constrain(param_a, 0, 1); 
 	        param_b = constrain(param_b, 0, 1);
+	        
+	        parameter_scroll_a.setVal(param_a);
+	        parameter_scroll_b.setVal(param_b);
 	      } 
 	      else if (whichButton == 2) {
 	        // Use the left mouse button for parameters c & d
@@ -1136,11 +1444,13 @@ public class gui_mainControls extends PApplet {
 	        param_d = 1-(float)(mouseY - yoffset)/yscale;
 	        param_c = constrain(param_c, 0, 1); 
 	        param_d = constrain(param_d, 0, 1);
+	        
+	        parameter_scroll_c.setVal(param_c);
+	        parameter_scroll_d.setVal(param_d);
 	      }
 	    }
 	  }
 	}
-
 
 	//-----------------------------------------------------
 	void drawMainFunctionCurve() {
@@ -1212,7 +1522,7 @@ public class gui_mainControls extends PApplet {
 	  // Inspired by @marcinignac & @soulwire: http://codepen.io/vorg/full/Aqyre   
 
 	  float blooperCx = margin0+bandTh/2.0f + xoffset2;
-	  float blooperCy = margin0+bandTh/2.0f;
+	  float blooperCy = margin0+bandTh/2.0f + yoffset - 75;
 	  float val = function (probe_x, param_a, param_b, param_c, param_d, param_n);
 	  float blooperR = bandTh * val;
 
@@ -1303,6 +1613,8 @@ public class gui_mainControls extends PApplet {
 	      float x = xoffset + i;
 	      float valRaw = rawHistory[i];
 	      float valFiltered = 1.0f - function (valRaw, param_a, param_b, param_c, param_d, param_n);
+	      
+	      if(bool_clamp)
 	      valFiltered = constrain(valFiltered, 0, 1); 
 	      float y = nhy + bandTh * valFiltered;
 	      vertex(x, y);
@@ -1339,7 +1651,7 @@ public class gui_mainControls extends PApplet {
 	  cosHistory.update  ( cosVal );  
 	  //triHistory.update  ( triVal ); 
 
-	  float nhy = margin0 + bandTh + margin1 + yscale + margin2;
+	  float nhy = margin0 + bandTh + margin1 + yscale + margin2 + yoffset - 70;
 	  
 	  /*
 	  noiseHistory.draw ( xoffset, nhy); 
@@ -1373,7 +1685,11 @@ public class gui_mainControls extends PApplet {
 
 	  //------------------
 	  fill(grayEnable);
-	  text(functionName, xoffset, yoffset+yscale+yBase);
+	  textSize(16);
+	  textAlign(CENTER, CENTER);
+	  text(functionName, xoffset + 150, 40);//yoffset+yscale+yBase);
+	  textAlign(LEFT);
+	 // textSize(9);
 	  int lastArgIndex = (bHasFinalIntArg) ? (nCurrentFunctionArgs-1) : nCurrentFunctionArgs; 
 
 	  float yPos; 
@@ -1554,6 +1870,13 @@ public class gui_mainControls extends PApplet {
 
 	//===============================================================
 	float function (float x, float a, float b, float c, float d, int n) {
+
+		// FLip X.
+		if(bool_flipX)
+		{
+			x = 1.0f - x;
+		}
+		
 	  float out = 0; 
 	  nFunctionMethods = functionMethodArraylist.size(); 
 	  if (nFunctionMethods > 0) {
@@ -1630,6 +1953,16 @@ public class gui_mainControls extends PApplet {
 	    }
 	  }
 
+	  if(bool_flipY)
+	  {
+			out = 1 - out;
+	  }
+	  
+	  if(bool_clamp)
+	  {
+		  out = constrain(out, 0, 1);
+	  }
+	  
 	  return out;
 	}
 
@@ -1673,16 +2006,23 @@ public class gui_mainControls extends PApplet {
 	    if (methods.length>0) {
 	      // count (specifically) the shaper functions.
 	      // copy into local arraylist data structure
-	      for (int i=0; i<methods.length; i++) {
-	        Method m = methods[i];
-	        String methodName = m.getName();
+	      for (int i=0; i<methods.length; i++)
+	      {
+	    	  Method m = methods[i];
+	    	  String methodName = m.getName();
 	        
-	        if (methodName.startsWith ("function_")) { 
-	          //println ('"' + methodName + '"'); 
-	          funcCount++;
-	          functionMethodArraylist.add(m);
-	        }
+	    	  if (methodName.startsWith ("function_"))
+	    	  { 
+	    		  // println ('"' + methodName + '"'); 
+	    		  funcCount++;
+	    		  functionMethodArraylist.add(m);
+	    	  }
 	      }
+	      
+		  // Sort the functions by their name strings.
+		  Collections.sort(functionMethodArraylist, new MethodComparator());
+	      
+	      
 	      nFunctionMethods = functionMethodArraylist.size(); 
 	      println("nFunctionMethods = " + nFunctionMethods);
 	    }
