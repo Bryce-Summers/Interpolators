@@ -60,6 +60,9 @@ public class UIConstants {
 	
 	//----------------
 	static void draw() {
+		
+	
+		
 	  // App.background(255);
 	  //drawButtonGroupHeadings();
 
@@ -83,6 +86,9 @@ public class UIConstants {
 	  App.bool_clamp   = buttons[2].isSelected();
 	  App.bool_comment = buttons[3].isSelected();
 	  App.bool_newTab  = buttons[4].isSelected();
+	  
+	  
+	  
 	}
 
 	//----------------

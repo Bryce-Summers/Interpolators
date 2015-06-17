@@ -292,6 +292,8 @@ public class gui_mainControls extends PApplet {
 		    sposMin = ypos;
 		    sposMax = ypos + sheight - swidth;
 		    loose = l;
+		    
+
 		  }
 
 		  public void setVal(float percentage)
@@ -307,11 +309,11 @@ public class gui_mainControls extends PApplet {
 		    } else {
 		      over = false;
 		    }
-		    if (mousePressed && over && active_scrollbar == null) {
+		    if (mousePressed && over && active_scrollbar == null && !bClickedInGraph) {
 		      locked = true;
 		      active_scrollbar = this;
 		    }
-		    if (!mousePressed) {
+		    if (!mousePressed && active_scrollbar == this) {
 		      locked = false;
 		      active_scrollbar = null;
 		      
@@ -390,12 +392,12 @@ public class gui_mainControls extends PApplet {
 		      over = false;
 		    }
 		  
-		    if (mousePressed && over && active_scrollbar == null && active)
+		    if (mousePressed && over && active_scrollbar == null && active && !bClickedInGraph)
 		    {
 			   locked = true;
 			   active_scrollbar = this;
 			}
-			if (!mousePressed) {
+			if (!mousePressed && active_scrollbar == this) {
 				locked = false;
 				active_scrollbar = null;
 			}
@@ -1394,6 +1396,11 @@ boolean inFunctionSelectionBounds()
 		int nCurrentFunctionArgs = getCurrentFunctionNArgs() - 1; // we subtract 1, for x itself
 		boolean bHasFinalIntArg = doesCurrentFunctionHaveFinalIntegerArgument(); 
 		
+		if(bHasFinalIntArg)
+		{
+			nCurrentFunctionArgs--;			
+		}
+		
 		parameter_scroll_a.active = (nCurrentFunctionArgs > 0); 
 		parameter_scroll_b.active = (nCurrentFunctionArgs > 1);
 		parameter_scroll_c.active = (nCurrentFunctionArgs > 2);
@@ -1785,7 +1792,7 @@ boolean inFunctionSelectionBounds()
 	  textAlign(CENTER, CENTER);
 	  text(functionName, xoffset + 150, 40);//yoffset+yscale+yBase);
 	  textAlign(LEFT);
-	 // textSize(9);
+	  textSize(12);
 	  int lastArgIndex = (bHasFinalIntArg) ? (nCurrentFunctionArgs-1) : nCurrentFunctionArgs; 
 
 	  float yPos; 
