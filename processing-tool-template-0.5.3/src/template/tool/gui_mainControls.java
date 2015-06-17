@@ -61,6 +61,9 @@ public class gui_mainControls extends PApplet {
 	int   param_n = 3;
 	float f_n = param_n;
 
+	int f_n_min = 2;
+	int f_n_max = 20;
+	
 	float probe_x = 0.5f;
 	float probe_y = 0.5f;
 	float animationConstant = 1000.0f;
@@ -1077,9 +1080,9 @@ public class gui_mainControls extends PApplet {
 		  }
 		  
 		  f_n -= e;
-		  f_n = constrain(f_n, 1, 10);
+		  f_n = constrain(f_n, f_n_min, f_n_max);
 		  param_n = (int)f_n;
-		  parameter_scroll_n.setVal((param_n -1)/9.0f);
+		  parameter_scroll_n.setVal((param_n - f_n_min)*1.0f/(f_n_max - f_n_min));
 
 	}
 	
@@ -1406,7 +1409,17 @@ boolean inFunctionSelectionBounds()
 		handleHScrollbar(parameter_scroll_d);
 		param_d = parameter_scroll_d.getVal(1.0f);
 		handleHScrollbar(parameter_scroll_n);
-		param_n = (int)(parameter_scroll_n.getVal(10.0f) + 1);
+		param_n = (int)(parameter_scroll_n.getVal(f_n_max - f_n_min + 1) + f_n_min);
+		
+		while(f_n > param_n + 1)
+		{
+			f_n -= 1;
+		}
+		
+		while(f_n < param_n - 1)
+		{
+			f_n += 1;
+		}
 		
 		textFont(Font_normal);
 				
