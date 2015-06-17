@@ -14,10 +14,10 @@ public class DisplayFrame extends javax.swing.JFrame {
         javax.swing.JPanel panel = new javax.swing.JPanel();
         panel.setBounds(20, 20, 1200, 600);
         gui_mainControls.editor = editor;
-                
+
 
         // Initialize and start the Modular Sketches.
-        
+
         final gui_mainControls main_controls = new gui_mainControls();
         main_controls.init(); // Needs to go first.        
         

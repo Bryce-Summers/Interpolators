@@ -32,6 +32,9 @@ public class gui_mainControls extends PApplet {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	// The number of decimal places for displayed floating point numbers.
+	int decimals = 4;
+	
 	boolean doSavePDF=false;
 
 	boolean bDrawProbe = true;
@@ -51,7 +54,7 @@ public class gui_mainControls extends PApplet {
 	float margin2 = 90;
 	float xoffset = margin0 + bandTh + margin1 + 550;
 	float yoffset = margin0 + bandTh + margin1 + 60;
-	float xoffset2 = xoffset - 90; 
+	float xoffset2 = xoffset - 90;
 	
 	
 	float param_a = 0.25f;
@@ -637,22 +640,22 @@ public class gui_mainControls extends PApplet {
 		
 		if(num_args >= 2)
 		{
-			output.append(", " + param_a);	
+			output.append(", " + nf(param_a, 1, decimals));	
 		}
 		
 		if(num_args >= 3)
 		{
-			output.append(", " + param_b);	
+			output.append(", " + nf(param_b, 1, decimals));
 		}
 		
 		if(num_args >= 4)
 		{
-			output.append(", " + param_c);	
+			output.append(", " + nf(param_c, 1, decimals));
 		}
 		
 		if(num_args >= 5)
 		{
-			output.append(", " + param_d);	
+			output.append(", " + nf(param_d, 1, decimals));	
 		}
 		
 		if(hasFinalIntArg)
@@ -679,9 +682,7 @@ public class gui_mainControls extends PApplet {
 		if(initial_function)
 		{
 			comment(output, function_name);
-			
-			
-			
+						
 		}
 				
 		
@@ -736,11 +737,11 @@ public class gui_mainControls extends PApplet {
 
 				flipY_split[1] = flipY_split[1].replace(";", "");
 				str = flipY_split[1];
-								
+				
 				// Perform the transformations.
 				if(bool_flipY)
 				{
-					str =  "1 -(" + str + ")";
+					str =  "1 -(" + str + ")"; 
 				}
 
 				if(bool_clamp)
@@ -750,6 +751,21 @@ public class gui_mainControls extends PApplet {
 				
 				// Reconstruct a well formed return statement.
 				String prefix = flipY_split[0];// Whitespace mostly.
+				
+				if(bool_flipY && !bool_clamp)
+				{
+					output.append(prefix + "// Flip Y.\n");
+				}
+				
+				else if(bool_flipY && bool_clamp)
+				{
+					output.append(prefix + "// Flip Y and constrain the output between 0 to 1.\n");
+				}
+				else if(!bool_flipY && bool_clamp)
+				{
+					output.append(prefix + "// Constrain the output between 0 to 1.\n");					
+				}
+				
 				output.append(prefix + "return " + str + ";\n");
 				
 			}
@@ -771,7 +787,7 @@ public class gui_mainControls extends PApplet {
 				parameter_name = parameter_name.replace(" ", "");
 				
 				// Append the input flipping code.
-				output.append("  " + parameter_name + " = " + "1 - " + parameter_name + ";\n");
+				output.append("  " + parameter_name + " = " + "1 - " + parameter_name + "; // Flip X.\n");
 			}
 			else // Append the unaltered code string.
 			{
@@ -892,9 +908,9 @@ public class gui_mainControls extends PApplet {
 		scroll = new VScrollbar(scroll_x, 0, 32, 600, 4);
 		scroll.setVal(0);
 		
-		int x = (int) xoffset + 100;
+		int x = (int) xoffset;
 		int y = (int) (yoffset + 320);
-		int width  = 200;
+		int width  = (int)xscale;
 		int height = 10;
 		int l = 4;
 		
@@ -914,11 +930,11 @@ public class gui_mainControls extends PApplet {
 		
 		parameter_scroll_n = new HScrollbar(x, y, width, height, l);
 		y += y_inc;
-		
+		parameter_scroll_n.setVal((param_n - f_n_min)*1.0f/(f_n_max - f_n_min));
 		
 	}
 	
-	// Orders Methods based on thier name strings.
+	// Orders Methods based on their name strings.
 	class MethodComparator implements Comparator<Method> {
 	    @Override
 	    public int compare(Method m1, Method m2) {
@@ -1401,7 +1417,7 @@ boolean inFunctionSelectionBounds()
 			nCurrentFunctionArgs--;			
 		}
 		
-		parameter_scroll_a.active = (nCurrentFunctionArgs > 0); 
+		parameter_scroll_a.active = (nCurrentFunctionArgs > 0);
 		parameter_scroll_b.active = (nCurrentFunctionArgs > 1);
 		parameter_scroll_c.active = (nCurrentFunctionArgs > 2);
 		parameter_scroll_d.active = (nCurrentFunctionArgs > 3);
@@ -1795,6 +1811,8 @@ boolean inFunctionSelectionBounds()
 	  textSize(12);
 	  int lastArgIndex = (bHasFinalIntArg) ? (nCurrentFunctionArgs-1) : nCurrentFunctionArgs; 
 
+	  float label_x = margin0 + xoffset2;
+	  
 	  float yPos; 
 	  for (int i=0; i<MAX_N_float_PARAMS; i++) {
 	    char argName = (char)('a'+i);
@@ -1802,11 +1820,11 @@ boolean inFunctionSelectionBounds()
 
 	    if (i<lastArgIndex) {
 	      fill (grayEnable);
-	      text(argName + ": " + nf(params[i], 1, 3), xoffset, yPos);
+	      text(argName + ": " + nf(params[i], 1, decimals), label_x, yPos);
 	    } 
 	    else {
 	      fill (grayDisable);
-	      text(argName + ": -----", xoffset, yPos);
+	      text(argName + ": -------", label_x, yPos);
 	    }
 	  }
 
@@ -1814,11 +1832,11 @@ boolean inFunctionSelectionBounds()
 	  yPos = yoffset+yscale+ yBase + ((MAX_N_float_PARAMS+1)*textLineHeight);
 	  if (bHasFinalIntArg) {
 	    fill (grayEnable);
-	    text("n: " + param_n, xoffset, yPos);
+	    text("n: " + param_n, label_x, yPos);
 	  } 
 	  else {
 	    fill (grayDisable);
-	    text("n: -----", xoffset, yPos);
+	    text("n: -------", label_x, yPos);
 	  }
 	}
 
