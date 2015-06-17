@@ -27,7 +27,6 @@ import java.util.Iterator;
 
 public class gui_mainControls extends PApplet {
 
-
 	/**
 	 * 
 	 */
@@ -50,7 +49,7 @@ public class gui_mainControls extends PApplet {
 	float margin0 = 10;
 	float margin1 = 5;
 	float margin2 = 90;
-	float xoffset = margin0 + bandTh + margin1 + 500;
+	float xoffset = margin0 + bandTh + margin1 + 550;
 	float yoffset = margin0 + bandTh + margin1 + 60;
 	float xoffset2 = xoffset - 90; 
 	
@@ -68,7 +67,6 @@ public class gui_mainControls extends PApplet {
 
 	boolean visited = false;
 	boolean bClickedInGraph = false;
-
 
 	
 	int MAX_N_float_PARAMS = 4;
@@ -100,7 +98,7 @@ public class gui_mainControls extends PApplet {
 	HScrollbar parameter_scroll_d;
 	HScrollbar parameter_scroll_n;
 	
-	int selection_text_x = 110;//500;
+	int selection_text_x = 150;//500;
 	int scroll_x = selection_text_x + 320 + 40;
 	int selection_line_h = 20;
 	int export_offsetY = 100;
@@ -267,6 +265,8 @@ public class gui_mainControls extends PApplet {
 		}
 	}
 	
+	Object active_scrollbar = null;
+	
 	class VScrollbar {
 		  int swidth, sheight;    // width and height of bar
 		  float xpos, ypos;       // x and y position of bar
@@ -304,11 +304,14 @@ public class gui_mainControls extends PApplet {
 		    } else {
 		      over = false;
 		    }
-		    if (mousePressed && over) {
+		    if (mousePressed && over && active_scrollbar == null) {
 		      locked = true;
+		      active_scrollbar = this;
 		    }
 		    if (!mousePressed) {
 		      locked = false;
+		      active_scrollbar = null;
+		      
 		    }
 		    if (locked) {
 		      newspos = constrain(mouseY-swidth/2, sposMin, sposMax);
@@ -360,6 +363,8 @@ public class gui_mainControls extends PApplet {
 		  boolean over;           // is the mouse over the slider?
 		  boolean locked;
 		  float ratio;
+		  
+		  boolean active = true;
 
 		  HScrollbar (float xp, float yp, int sw, int sh, int l) {
 		    swidth = sw;
@@ -381,12 +386,17 @@ public class gui_mainControls extends PApplet {
 		    } else {
 		      over = false;
 		    }
-		    if (mousePressed && over) {
-		      locked = true;
-		    }
-		    if (!mousePressed) {
-		      locked = false;
-		    }
+		  
+		    if (mousePressed && over && active_scrollbar == null && active)
+		    {
+			   locked = true;
+			   active_scrollbar = this;
+			}
+			if (!mousePressed) {
+				locked = false;
+				active_scrollbar = null;
+			}
+		    
 		    if (locked) {
 		      newspos = constrain(mouseX-sheight/2, sposMin, sposMax);
 		    }
@@ -410,8 +420,25 @@ public class gui_mainControls extends PApplet {
 
 		  void display() {
 		    noStroke();
-		    fill(204);
+		    
+		    if(active)
+		    {
+		    	// Scrollbar Active color.
+		    	fill(204);
+		    }
+		    else
+		    {
+		    	// Scrollbar InActive Color.
+		    	fill(220);
+		    }
 		    rect(xpos, ypos, swidth, sheight);
+		    
+		    if(!active)
+		    {
+		    	return;
+		    }
+		    
+		    // Select Region.
 		    if (over || locked) {
 		      fill(0, 0, 0);
 		    } else {
@@ -843,9 +870,16 @@ public class gui_mainControls extends PApplet {
 	  
 	  selector = new gui_functionSelection(this);
 	  
-	  setup_scrollbars();	  
+	  setup_buttons();
 	  
+	  setup_scrollbars();  
 	  setupGroups();
+
+	}
+	
+	public void setup_buttons()
+	{
+		UIConstants.init(this);
 	}
 	
 	public void setup_scrollbars()
@@ -1053,14 +1087,17 @@ public class gui_mainControls extends PApplet {
 	int whichButton = 0; 
 	public void mousePressed() {
 		
+		UIConstants.mousePressed();
 		
-		
+		/*
 		for(f_group g : function_groups)
 		{
 			if(g.mouseIn())
 			g.mouseP();
 		}
-		
+		*/
+
+		/*
 		if(mouseInCircle(comment_x, comment_y, comment_radius))
 		{
 			bool_comment = !bool_comment;
@@ -1096,6 +1133,7 @@ public class gui_mainControls extends PApplet {
 		drawButton(newTab_x, newTab_y, newTab_radius, getBooleanString(bool_newTab));
 		text("Use New Tab?", newTab_x + newTab_radius*2, newTab_y);
 		drawButton(go_x, go_y, drawButton_radius, "Go!");
+		*/
 		
 		// Function Selection Bounds checking mouse pressing code.
 		if(inFunctionSelectionBounds())
@@ -1241,7 +1279,9 @@ boolean inFunctionSelectionBounds()
 
 		selectDraw();
 		
-		drawExports();
+		//drawExports();
+		
+		UIConstants.draw();
 	}
 	
 	public void drawExports()
@@ -1304,10 +1344,12 @@ boolean inFunctionSelectionBounds()
 	
 	public void selectDraw()
 	{
+		/*
 		for(f_group g : function_groups)
 		{
 			g.draw();
 		}
+		*/
 		
 		if(selector == null)
 		{
@@ -1344,7 +1386,17 @@ boolean inFunctionSelectionBounds()
 		
 		scroll.update();
 		scroll.display();
-				
+		
+		
+		int nCurrentFunctionArgs = getCurrentFunctionNArgs() - 1; // we subtract 1, for x itself
+		boolean bHasFinalIntArg = doesCurrentFunctionHaveFinalIntegerArgument(); 
+		
+		parameter_scroll_a.active = (nCurrentFunctionArgs > 0); 
+		parameter_scroll_b.active = (nCurrentFunctionArgs > 1);
+		parameter_scroll_c.active = (nCurrentFunctionArgs > 2);
+		parameter_scroll_d.active = (nCurrentFunctionArgs > 3);
+		parameter_scroll_n.active = (bHasFinalIntArg);
+		
 		handleHScrollbar(parameter_scroll_a);
 		param_a = parameter_scroll_a.getVal(1.0f);
 		handleHScrollbar(parameter_scroll_b);
@@ -1357,6 +1409,7 @@ boolean inFunctionSelectionBounds()
 		param_n = (int)(parameter_scroll_n.getVal(10.0f) + 1);
 		
 		textFont(Font_normal);
+				
 	}
 	
 	void handleHScrollbar(HScrollbar H)
@@ -1608,19 +1661,49 @@ boolean inFunctionSelectionBounds()
 	    // draw filtered noise history
 	    noFill(); 
 	    stroke(0); 
-	    beginShape(); 
+	    
+	    float x2 = xoffset + 0;
+	    float y2 = getYFiltered(0, nhy);
+	    
 	    for (int i=0; i<nData; i++) {
 	      float x = xoffset + i;
-	      float valRaw = rawHistory[i];
+	      float y = getYFiltered(i, nhy);
+	      
+	         
+		  if ((y  < 0) || (y > 1) ||
+			  (y2 < 0) || (y2 > 1))
+		  {
+			  stroke(boundingBoxStrokeColor);
+		  }
+		  else
+		  {
+			  stroke(0);
+		  }
+		  
+		  float screen_y1 = nhy + bandTh * y;
+		  float screen_y2 = nhy + bandTh * y2;
+	      
+	      line(x,  screen_y1,
+	    	   x2, screen_y2);
+	      
+	      x2 = x;
+	      y2 = y;
+	    }
+	    
+	  }
+	  
+	  float getYFiltered(int i, float nhy)
+	  {
+		  float valRaw = rawHistory[i];
 	      float valFiltered = 1.0f - function (valRaw, param_a, param_b, param_c, param_d, param_n);
 	      
 	      if(bool_clamp)
-	      valFiltered = constrain(valFiltered, 0, 1); 
-	      float y = nhy + bandTh * valFiltered;
-	      vertex(x, y);
-	    }
-	    endShape();
+		      valFiltered = constrain(valFiltered, 0, 1);
+	      
+	      
+	      return valFiltered;
 	  }
+	  
 	}
 
 
