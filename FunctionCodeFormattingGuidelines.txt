@@ -1,0 +1,12 @@
+Only functions that return floats, booleans, or void are currently supported for helper functions.
+
+
+All functions should contain the entire function definition in one line including a left parenthesis:
+void foo(float x, float a, float b){
+}
+
+NOT:
+     void foo(  float x,
+		float a,
+		float b){
+

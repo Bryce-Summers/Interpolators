@@ -2482,13 +2482,6 @@ public class GolanSketch extends PApplet {
 	// Joining Two Lines with a Circular Arc Fillet
 	// Adapted from Robert D. Miller / Graphics Gems III.
 
-	float arcStartAngle;
-	float arcEndAngle;
-	float arcStartX, arcStartY;
-	float arcEndX, arcEndY;
-	float arcCenterX, arcCenterY;
-	float arcRadius;
-
 	// ====================================================================
 	public float function_CircularFillet (float x, float a, float b, float c) {
 	  functionName = "Double-Linear with Circular Fillet";
@@ -2501,8 +2494,22 @@ public class GolanSketch extends PApplet {
 	  b = constrain(b, min_param_b, max_param_b); 
 
 	  float R = c;
-	  computeFilletParameters (0, 0, a, b, a, b, 1, 1, R);
-
+	  float[] parameters = new float[9];
+	  computeFilletParameters (0, 0, a, b, a, b, 1, 1, R, parameters);
+	  
+	  // Extract outputs.
+	  float arcStartAngle = parameters[0];
+	  float arcEndAngle = parameters[1];
+	  float arcStartX = parameters[2];
+	  float arcStartY = parameters[3];
+	  float arcEndX   = parameters[4];
+	  float arcEndY   = parameters[5];
+	  float arcCenterX = parameters[6];
+	  float arcCenterY = parameters[7];
+	  float arcRadius = parameters[8];
+	  
+	  
+	  
 	  float t = 0;
 	  float y = 0;
 	  x = constrain(x, 0, 1); 
@@ -2551,7 +2558,8 @@ public class GolanSketch extends PApplet {
 	float p2x, float p2y, 
 	float p3x, float p3y, 
 	float p4x, float p4y, 
-	float r) {
+	float r,
+	float[] parameters) {// 9 output parameters.
 
 	  float c1   = p2x*p1y - p1x*p2y;
 	  float a1   = p2y-p1y;
@@ -2634,16 +2642,27 @@ public class GolanSketch extends PApplet {
 	    arc1 = arcStart + arcAngle;
 	    arc2 = arcStart;
 	  }
-
-	  arcCenterX    = pCx;
-	  arcCenterY    = pCy;
-	  arcStartAngle = arc1;
-	  arcEndAngle   = arc2;
-	  arcRadius     = r;
-	  arcStartX = arcCenterX + arcRadius*cos(arcStartAngle);
-	  arcStartY = arcCenterY + arcRadius*sin(arcStartAngle);
-	  arcEndX   = arcCenterX + arcRadius*cos(arcEndAngle);
-	  arcEndY   = arcCenterY + arcRadius*sin(arcEndAngle);
+	  
+	  float arcCenterX    = pCx;
+	  float arcCenterY    = pCy;
+	  float arcStartAngle = arc1;
+	  float arcEndAngle   = arc2;
+	  float arcRadius     = r;
+	  float arcStartX = arcCenterX + arcRadius*cos(arcStartAngle);
+	  float arcStartY = arcCenterY + arcRadius*sin(arcStartAngle);
+	  float arcEndX   = arcCenterX + arcRadius*cos(arcEndAngle);
+	  float arcEndY   = arcCenterY + arcRadius*sin(arcEndAngle);
+	  	  
+	  parameters[0] = arcStartAngle;
+	  parameters[1] = arcEndAngle;
+	  parameters[2] = arcStartX;
+	  parameters[3] = arcStartY;
+	  parameters[4] = arcEndX;
+	  parameters[5] = arcEndY;
+	  parameters[6] = arcCenterX;
+	  parameters[7] = arcCenterY;
+	  parameters[8] = arcRadius;
+	  	  
 	}
 	
 	// BRYCE f11

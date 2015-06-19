@@ -3,6 +3,8 @@ package template.tool;
 import processing.app.Editor;
 import processing.app.Sketch;
 import processing.core.*;
+import processing.data.Table;
+import processing.data.TableRow;
 import processing.event.MouseEvent;
 
 import java.io.BufferedReader;
@@ -13,10 +15,12 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 // Imports for PDF, to save a vector graphic of the function.
 //import processing.pdf.*;
@@ -27,6 +31,10 @@ import java.util.Iterator;
 
 public class gui_mainControls extends PApplet {
 
+	
+	final int room_w = 1200;
+	final int room_h = 600;
+	
 	/**
 	 * 
 	 */
@@ -52,9 +60,9 @@ public class gui_mainControls extends PApplet {
 	float margin0 = 10;
 	float margin1 = 5;
 	float margin2 = 90;
-	float xoffset = margin0 + bandTh + margin1 + 550;
-	float yoffset = margin0 + bandTh + margin1 + 60;
-	float xoffset2 = xoffset - 90;
+	float xoffset = margin0 + bandTh + margin1 + 589;
+	float yoffset = margin0 + bandTh + margin1 + 69 + 3;
+	float xoffset2 = xoffset - 78;
 	
 	
 	float param_a = 0.25f;
@@ -105,7 +113,7 @@ public class gui_mainControls extends PApplet {
 	HScrollbar parameter_scroll_n;
 	
 	int selection_text_x = 150;//500;
-	int scroll_x = selection_text_x + 320 + 40;
+	int scroll_x = selection_text_x + 320 + 40 + 49;
 	int selection_line_h = 20;
 	int export_offsetY = 100;
 	
@@ -670,6 +678,13 @@ public class gui_mainControls extends PApplet {
 		}
 	}
 	
+	// Returns true iff the string representing a line of code is a function.
+	boolean isFunctionDefinitionCode(String code)
+	{
+		return !code.contains("=") && !code.contains("\"") && 
+			(code.contains("void") || code.contains("boolean") || code.contains("float"));
+	}
+	
 	// returns a string representing the code for the given function name;
 	String getCodeString(String function_name, HashSet<String> dependancies, HashSet<String> helper_names,
 				boolean initial_function)
@@ -677,7 +692,7 @@ public class gui_mainControls extends PApplet {
 		
 		StringBuilder output = new StringBuilder();
 		
-		output.append("\n\n");
+		output.append("");//\n
 		
 		if(initial_function)
 		{
@@ -685,22 +700,41 @@ public class gui_mainControls extends PApplet {
 						
 		}
 				
-		
+		/*
 		File file = loadFile("code.txt");
-		
 		ArrayList<String> all_code = readFile(file);
+		*/
+		
+		// Proper Processing way to load a file.
+		String[] file = loadStrings("code.txt");
+		
+		// Convert the array of strings to an array list.
+		List<String> all_code = Arrays.asList(file);  
 		
 		boolean found_string = false;
 		int leftP = 0;
 		
 		// Process every line of the function.
-		for(String str : all_code)
+		Iterator<String> iter = all_code.iterator();
+		//for(String str : all_code)
+		while(iter.hasNext())
 		{			
+			String str = iter.next();
+			// Remove all Tabs.
+			str = str.replace("\t", "");
+			
 			if(!found_string && str.contains(function_name))
 			{
-				// Eliminate false positives.
-				if(!str.contains("=") && !str.contains("\""))
+				// Check if we have found the original string.
+				if(isFunctionDefinitionCode(str))
 				{
+					while(!str.contains("{"))
+					{
+						output.append(str);
+						output.append("\n");
+						str = iter.next();
+						str = str.replace("\t", "");
+					}
 					found_string = true;
 				}
 			}
@@ -723,9 +757,6 @@ public class gui_mainControls extends PApplet {
 					dependancies.add(helper_name);
 				}
 			}
-
-			// Remove all Tabs.
-			str = str.replace("\t", "");
 
 			// -- Handle mutated and literal translation of code.
 			
@@ -806,7 +837,7 @@ public class gui_mainControls extends PApplet {
 			}
 		}
 		
-		output.append("\n\n");
+		output.append("\n");
 		return output.toString();
 	}
 	
@@ -877,13 +908,12 @@ public class gui_mainControls extends PApplet {
 
 	}
 	
-
 	//-----------------------------------------------------
 	public void setup() {
 	  int scrW = (int)(margin0 + bandTh + margin1 + xscale + margin0);
 	  int scrH = (int)(margin0 + bandTh + margin1 + yscale + margin2 + bandTh + margin0 + bandTh + margin0 + bandTh + margin1);
 	  //size (scrW, scrH);
-	  size(1200, 600);
+	  size(room_w, room_h);
 	  
 	  initHistories();
 	  
@@ -905,12 +935,13 @@ public class gui_mainControls extends PApplet {
 	
 	public void setup_scrollbars()
 	{
-		scroll = new VScrollbar(scroll_x, 0, 32, 600, 4);
+		int scrollbar_y = 41;
+		scroll = new VScrollbar(scroll_x, scrollbar_y, 32, room_h - scrollbar_y, 4);
 		scroll.setVal(0);
 		
 		int x = (int) xoffset;
-		int y = (int) (yoffset + 320);
-		int width  = (int)xscale;
+		int y = (int) (yoffset + 313);
+		int width  = (int)(xscale + 1);
 		int height = 10;
 		int l = 4;
 		
@@ -947,7 +978,7 @@ public class gui_mainControls extends PApplet {
 	
 	public void setupGroups()
 	{
-		  function_groups = new f_group[12];
+		  function_groups = new f_group[11];
 		  
 		  for(int i = 0; i < function_groups.length; i++)
 		  {
@@ -959,101 +990,81 @@ public class gui_mainControls extends PApplet {
 		  function_groups[2].name("Ogee");
 		  function_groups[3].name("EaseIn");
 		  function_groups[4].name("EaseOut");
-		  function_groups[5].name("Penner");
-		  function_groups[6].name("Gaussian");
-		  function_groups[7].name("Bezier");		  
-		  function_groups[8].name("Staircase");
-		  function_groups[9].name("Windows");
-		  function_groups[10].name("Half");
-		  function_groups[11].name("Other");
-
+		  function_groups[5].name("Penner's");
+		  function_groups[6].name("Staircase");
+		  function_groups[7].name("Window");		  
+		  function_groups[8].name("General");
+		  function_groups[9].name("Linear");
+		  function_groups[10].name("Other");
+		  
 		  // Sort the functions by their name strings.
 		  // It is quite mysterious how the list of methods needs to be sorted in multiple locations.
 		  // This could possible be investigated...
 		  Collections.sort(functionMethodArraylist, new MethodComparator());
-		  		  
-		  int len = functionMethodArraylist.size();
-		  for(int i = 0; i < len; i++)
-		  {
-			  Method m = functionMethodArraylist.get(i);
+
+		  Table table = loadTable("CategoriesSpecification.csv", "header");
+		  
+		  int i = 0;
+		  for (TableRow row : table.rows()) {
 			  
-			  String name = m.getName().toLowerCase();
+			  //Method m = functionMethodArraylist.get(i);
+			  //String name = m.getName().toLowerCase();
 			  
 			  // All.
 			  function_groups[0].addIndice(i);
 			  
-			  boolean found = false;
-			  
-			  if(name.contains("sigmoid"))
+			  if(row.getInt("Sigmoid") == 1)
 			  {
 				  function_groups[1].addIndice(i);
-				  found = true;
 			  }
 			  
-			  if(name.contains("ogee"))
+			  if(row.getInt("Ogee") == 1)
 			  {
 				  function_groups[2].addIndice(i);
-				  found = true;
 			  }
 			  
-			  if(name.contains("ease") && name.contains("in"))
+			  if(row.getInt("EaseIn") == 1)
 			  {
-				  System.out.println(name);
 				  function_groups[3].addIndice(i);
-				  found = true;
 			  }
 			  
-			  if(name.contains("ease") && name.contains("out"))
+			  if(row.getInt("EaseOut") == 1)
 			  {
 				  function_groups[4].addIndice(i);
-				  found = true;
 			  }
 			  
-			  if(name.contains("penner"))
+			  if(row.getInt("Penner's") == 1)
 			  {
 				  function_groups[5].addIndice(i);
-				  found = true;
 			  }
 			  
-			  if(name.contains("gaussian"))
+			  if(row.getInt("Staircase") == 1)
 			  {
 				  function_groups[6].addIndice(i);
-				  found = true;
 			  }
 			  
-			  if(name.contains("bezier"))
+			  if(row.getInt("Window") == 1)
 			  {
 				  function_groups[7].addIndice(i);
-				  found = true;
 			  }
 			  
-			  if(name.contains("staircase"))
+			  if(row.getInt("General") == 1)
 			  {
 				  function_groups[8].addIndice(i);
-				  found = true;
 			  }
 			  
-			  if(name.contains("window"))
+			  if(row.getInt("Linear") == 1)
 			  {
 				  function_groups[9].addIndice(i);
-				  found = true;
 			  }
 			  
-			  if(name.contains("half"))
+			  if(row.getInt("Other") == 1)
 			  {
 				  function_groups[10].addIndice(i);
-				  found = true;
-			  }
-			  
-			  			  
-			  if(!found)
-			  {
-				  function_groups[11].addIndice(i);
 			  }			  
 			  
-			  
-		  }
-		  
+			  i++;
+		  }		  
 		  
 		  // Setup the global variables correctly.
 		  fixFUNCTIONMODE();
@@ -1459,7 +1470,7 @@ boolean inFunctionSelectionBounds()
 	{
 		double spos = Math.max(0, scroll.getPos());
 		int val = (int)(spos*selection_line_h*(function_groups[group_index].size() - 12));
-				return 20 - val;
+				return 62 - val;
 	}
 	
 	public void mainDraw()
@@ -1770,7 +1781,7 @@ boolean inFunctionSelectionBounds()
 	  cosHistory.update  ( cosVal );  
 	  //triHistory.update  ( triVal ); 
 
-	  float nhy = margin0 + bandTh + margin1 + yscale + margin2 + yoffset - 70;
+	  float nhy = margin0 + bandTh + margin1 + yscale + margin2 + yoffset - 65 - 15;
 	  
 	  /*
 	  noiseHistory.draw ( xoffset, nhy); 
@@ -1795,8 +1806,8 @@ boolean inFunctionSelectionBounds()
 
 	  float grayEnable = 64;
 	  float grayDisable = 192;
-	  float textLineHeight = 13; 
-	  float yBase = 15; 
+	  float textLineHeight = 15; 
+	  float yBase = 3;
 
 	  float params[] = {
 	    param_a, param_b, param_c, param_d
@@ -1804,9 +1815,11 @@ boolean inFunctionSelectionBounds()
 
 	  //------------------
 	  fill(grayEnable);
+	  
+	  // Draw The Title Of the Function in the main section of the screen.
 	  textSize(16);
-	  textAlign(CENTER, CENTER);
-	  text(functionName, xoffset + 150, 40);//yoffset+yscale+yBase);
+	  textAlign(LEFT, CENTER);
+	  text(functionName, xoffset, 60+1);//yoffset+yscale+yBase);
 	  textAlign(LEFT);
 	  textSize(12);
 	  int lastArgIndex = (bHasFinalIntArg) ? (nCurrentFunctionArgs-1) : nCurrentFunctionArgs; 
@@ -3789,13 +3802,6 @@ boolean inFunctionSelectionBounds()
 	// Joining Two Lines with a Circular Arc Fillet
 	// Adapted from Robert D. Miller / Graphics Gems III.
 
-	float arcStartAngle;
-	float arcEndAngle;
-	float arcStartX, arcStartY;
-	float arcEndX, arcEndY;
-	float arcCenterX, arcCenterY;
-	float arcRadius;
-
 	// ====================================================================
 	public float function_CircularFillet (float x, float a, float b, float c) {
 	  functionName = "Double-Linear with Circular Fillet";
@@ -3808,8 +3814,22 @@ boolean inFunctionSelectionBounds()
 	  b = constrain(b, min_param_b, max_param_b); 
 
 	  float R = c;
-	  computeFilletParameters (0, 0, a, b, a, b, 1, 1, R);
-
+	  float[] parameters = new float[9];
+	  computeFilletParameters (0, 0, a, b, a, b, 1, 1, R, parameters);
+	  
+	  // Extract outputs.
+	  float arcStartAngle = parameters[0];
+	  float arcEndAngle = parameters[1];
+	  float arcStartX = parameters[2];
+	  float arcStartY = parameters[3];
+	  float arcEndX   = parameters[4];
+	  float arcEndY   = parameters[5];
+	  float arcCenterX = parameters[6];
+	  float arcCenterY = parameters[7];
+	  float arcRadius = parameters[8];
+	  
+	  
+	  
 	  float t = 0;
 	  float y = 0;
 	  x = constrain(x, 0, 1); 
@@ -3858,7 +3878,8 @@ boolean inFunctionSelectionBounds()
 	float p2x, float p2y, 
 	float p3x, float p3y, 
 	float p4x, float p4y, 
-	float r) {
+	float r,
+	float[] parameters) {// 9 output parameters.
 
 	  float c1   = p2x*p1y - p1x*p2y;
 	  float a1   = p2y-p1y;
@@ -3941,16 +3962,27 @@ boolean inFunctionSelectionBounds()
 	    arc1 = arcStart + arcAngle;
 	    arc2 = arcStart;
 	  }
-
-	  arcCenterX    = pCx;
-	  arcCenterY    = pCy;
-	  arcStartAngle = arc1;
-	  arcEndAngle   = arc2;
-	  arcRadius     = r;
-	  arcStartX = arcCenterX + arcRadius*cos(arcStartAngle);
-	  arcStartY = arcCenterY + arcRadius*sin(arcStartAngle);
-	  arcEndX   = arcCenterX + arcRadius*cos(arcEndAngle);
-	  arcEndY   = arcCenterY + arcRadius*sin(arcEndAngle);
+	  
+	  float arcCenterX    = pCx;
+	  float arcCenterY    = pCy;
+	  float arcStartAngle = arc1;
+	  float arcEndAngle   = arc2;
+	  float arcRadius     = r;
+	  float arcStartX = arcCenterX + arcRadius*cos(arcStartAngle);
+	  float arcStartY = arcCenterY + arcRadius*sin(arcStartAngle);
+	  float arcEndX   = arcCenterX + arcRadius*cos(arcEndAngle);
+	  float arcEndY   = arcCenterY + arcRadius*sin(arcEndAngle);
+	  	  
+	  parameters[0] = arcStartAngle;
+	  parameters[1] = arcEndAngle;
+	  parameters[2] = arcStartX;
+	  parameters[3] = arcStartY;
+	  parameters[4] = arcEndX;
+	  parameters[5] = arcEndY;
+	  parameters[6] = arcCenterX;
+	  parameters[7] = arcCenterY;
+	  parameters[8] = arcRadius;
+	  	  
 	}
 	
 	// BRYCE f11

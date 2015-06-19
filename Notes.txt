@@ -59,3 +59,17 @@ Copy the code from src/template/tool to proccessing-tooltemplate-0.5.3/src/templ
 Run the Ant build script from within Eclipse.
 You should make sure the build script should be configured to send the built tool to the tools folder of your installed processing 3 environment.
 The Newly modified tool should be fit for testing and use within processing 3.
+
+
+Translateing from Proccessing to PApplet java.
+------------------------------------------
+
+Proccessing Colors are integers, so change the 'color' type to 'int'
+
+Floats need to end with 'f', so change "8.0" to "8.0f"
+
+If you wish to create separate classes, but still call proccessing functions, then allow each of the decomposed classes to have a reference to a static variable pointing to the main PApplet class.
+
+
+
+
