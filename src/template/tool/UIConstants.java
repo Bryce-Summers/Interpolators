@@ -83,6 +83,7 @@ public class UIConstants {
 		buttonGroupB.buttonArray[4].buttonState = BUTTON_STATE_SELECTED;
 	}
 	
+	static int timer = 60;
 	
 	//----------------
 	static void draw() {
@@ -99,9 +100,17 @@ public class UIConstants {
 
 		boolean bDoGenerate = generateButton.handleMouse();
 		generateButton.drawButton();
-		if (bDoGenerate){
+		if (bDoGenerate && timer <= 0){
+			App.println("Timer = " + timer);
 		   App.export();
+		   javax.swing.JOptionPane.showMessageDialog(null, "Code has been Generated!");
+		   timer = 60;
 		}
+		else if(timer > 0)
+		{
+			timer--;
+		}
+		
 		
 
 		buttonGroupA.drawTooltips(); 

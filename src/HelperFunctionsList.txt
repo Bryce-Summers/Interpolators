@@ -1,0 +1,18 @@
+// List of the names of all helper functions.
+// Please add names to this list if functions with additional helper functions are used.
+
+sinc
+linetopoint
+computeFilletParameters
+IsPerpendicular
+calcCircleFrom3Points
+slopeFromT
+xFromT
+yFromT
+B0
+B1
+B2
+B3
+findx
+findy
+function_CubicBezier

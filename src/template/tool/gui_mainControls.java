@@ -84,10 +84,13 @@ public class gui_mainControls extends PApplet {
 
 	
 	int MAX_N_float_PARAMS = 4;
+	
+	// Specifies which signal is displayed in the history window.
+	int history_type = 0;
 
-	//DataHistoryGraph noiseHistory;
+	DataHistoryGraph noiseHistory;
 	DataHistoryGraph cosHistory;
-	//DataHistoryGraph triHistory;
+	DataHistoryGraph triHistory;
 	
 	
 	// The important variables when dealing with functions.
@@ -540,40 +543,37 @@ public class gui_mainControls extends PApplet {
 			editor.insertText(output.toString());
 			return;
 		}
+
+
+		// HashSet<String> functions_included = new HashSet<String>();
 		
-		
- 
-		HashSet<String> functions_included = new HashSet<String>();
+		// -- Load the names of all helper functions.
 		HashSet<String> helper_names = new HashSet<String>();
+
+		String[] file = loadStrings("HelperFunctionsList.txt");
 		
-		helper_names.add("sinc");
-		helper_names.add("linetopoint");
-		helper_names.add("computeFilletParameters");
-		helper_names.add("IsPerpendicular");
-		helper_names.add("calcCircleFrom3Points");
-		helper_names.add("slopeFromT");
-		helper_names.add("xFromT");
-		helper_names.add("yFromT");
-		helper_names.add("B0");
-		helper_names.add("B1");
-		helper_names.add("B2");
-		helper_names.add("B3");
-		helper_names.add("findx");
-		helper_names.add("findy");
-		helper_names.add("function_CubicBezier");
+		int start_index = 3; // 3 Header lines.
+		
+		int len = file.length;
+		
+		for(int i = start_index; i < len; i++)
+		{
+			helper_names.add(file[i]);
+		}
+		
 		
 		HashSet<String> dependancies = new HashSet<String>();
 
 		StringBuilder text = new StringBuilder();
 		String function_text = getCodeString(methodName, dependancies, helper_names, true);
-		
+
 		// The functions that have already been added.
 		HashSet<String> names_done = new HashSet<String>();
 		names_done.add(methodName);
 		text.append(function_text);
-		
+
 		// FIXME : Helper functions should not have input comments.
-		
+
 		while(true)
 		{
 			boolean done = true;
@@ -602,23 +602,6 @@ public class gui_mainControls extends PApplet {
 		
 		editor.insertText(text.toString());
 
-		/*
-		sinc
-		linetopoint
-		computeFilletParameters
-		IsPerpendicular
-		calcCircleFrom3Points
-		slopeFromT
-		xFromT
-		yFromT
-		B0
-		B1
-		B2
-		B3
-		findx
-		findy
-		*/
-		
 	}
 
 	// Appends a proper usage comment to the given string builder.
@@ -1202,8 +1185,19 @@ public class gui_mainControls extends PApplet {
 	public void mouseReleased() {
 	  whichButton = 0;
 	  
+	  
+	  float y_top   = margin0 + bandTh + margin1 + yscale + margin2 + yoffset - 65 - 15;
+	  float y_bot   = y_top + bandTh;
+	  float x_left  = xoffset;
+	  float x_right = x_left + xscale;
+	    
+	  if(x_left <= mouseX && mouseX <= x_right &&
+		 y_top  <= mouseY && mouseY <= y_bot)
+	  {
+		  history_type = (history_type + 1) % 3;
+	  }
+	  
 	}
-
 // Determines the x region of the screen that cooresponds to the list of functions.
 // This function will be used to determine if mouse presses fall in that region.
 boolean inFunctionSelectionBounds()
@@ -1306,19 +1300,18 @@ boolean inFunctionSelectionBounds()
 	//-----------------------------------------------------
 	public void draw() {
 
-
 		mainDraw();
 
 		selectDraw();
-		
+
 		//drawExports();
-		
+
 		UIConstants.draw();
 	}
-	
+
 	public void drawExports()
 	{
-		
+
 		drawButton(flipX_x, flipX_y, flipX_radius, getBooleanString(bool_flipX));
 		text("Flip X?", flipX_x + flipX_radius*2, flipX_y);
 		
@@ -1688,6 +1681,7 @@ boolean inFunctionSelectionBounds()
 	  //-------------------------
 	  void draw (float xoffset, float nhy) {
 
+		  
 	    // draw bounding rectangles
 	    noFill(); 
 	    stroke(boundingBoxStrokeColor);
@@ -1757,9 +1751,9 @@ boolean inFunctionSelectionBounds()
 	//-----------------------------------------------------
 	void initHistories() {
 
-	  //noiseHistory = new DataHistoryGraph ((int)xscale);
+	  noiseHistory = new DataHistoryGraph ((int)xscale);
 	  cosHistory   = new DataHistoryGraph ((int)xscale);
-	  //triHistory   = new DataHistoryGraph ((int)xscale);
+	  triHistory   = new DataHistoryGraph ((int)xscale);
 	}
 
 
@@ -1767,29 +1761,31 @@ boolean inFunctionSelectionBounds()
 	void drawNoiseHistories() {
 
 	  // update with the latest incoming values
-	  //int nData = (int)xscale;
-	  //float noiseVal = noise(millis()/ (nData/2.0f));
+	  int nData = (int)xscale;
+	  float noiseVal = noise(millis()/ (nData/2.0f));
 	  float cosVal   = 0.5f + (0.5f * cos(PI * millis()/animationConstant));
 	  
 	  float ac = animationConstant;
 	  
-	  //float tv = (((int)(millis()/ac))%2 == 0) ? (millis()%ac) : (ac - (millis()%ac));
-	  //float triVal = 1.0f - tv/ac;
+	  float tv = (((int)(millis()/ac))%2 == 0) ? (millis()%ac) : (ac - (millis()%ac));
+	  float triVal = 1.0f - tv/ac;
 	  
 	  
-	  //noiseHistory.update( noiseVal ); 
-	  cosHistory.update  ( cosVal );  
-	  //triHistory.update  ( triVal ); 
+	  noiseHistory.update( noiseVal ); 
+	  cosHistory.update(cosVal);
+	  triHistory.update  ( triVal ); 
 
 	  float nhy = margin0 + bandTh + margin1 + yscale + margin2 + yoffset - 65 - 15;
-	  
-	  /*
-	  noiseHistory.draw ( xoffset, nhy); 
-	  nhy += (bandTh + margin1);
-	  */ 
-	  cosHistory.draw   ( xoffset, nhy);
-	  nhy += (bandTh + margin1); 
-	  //triHistory.draw   ( xoffset, nhy);
+
+	  switch(history_type)
+	  {
+	  	case 0: cosHistory.draw ( xoffset, nhy);
+	  		break;
+	  	case 1: noiseHistory.draw ( xoffset, nhy);
+  			break;
+	  	case 2: triHistory.draw ( xoffset, nhy);
+	  		break;
+	  }
 	}
 
 
