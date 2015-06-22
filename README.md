@@ -41,7 +41,7 @@ Press the big "Go" Button.
 Current Visual appearance
 ==================
 
-![alt text](https://github.com/Bryce-Summers/Interpolators/blob/master/Screenshots/ScreenShot6-12-2015.png "Visual Appearance, 6/12/2015")
+![alt text](https://github.com/Bryce-Summers/Interpolators/blob/master/Screenshots/6-22-2015.png "Visual Appearance, 6/12/2015")
 
 
 
