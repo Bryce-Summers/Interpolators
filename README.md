@@ -53,3 +53,4 @@ Proccessing 3 Sketches will display mysterious errors regarding '(' and ')' if y
 
 If the Tool seems to be drawing at an offset to the window, try resizing the window and the problem should go away.
 
+Do not switch between java mode and python mode when using this tool and this tool only works in java mode.
