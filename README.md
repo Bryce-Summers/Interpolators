@@ -6,10 +6,10 @@ Please see: https://github.com/golanlevin/Pattern_Master
 Features
 -----
 
-Function Range Constraining.
-Horizontal and Vertical Flipping baked made to order into the output functions.
-Many different categorized interpolation functions to choose from.
-The program allows the user to insert their new code into new tabs.
+- Function Range Constraining.
+- Horizontal and Vertical Flipping baked made to order into the output functions.
+- Many different categorized interpolation functions to choose from.
+- The program allows the user to insert their new code into new tabs.
 
 
 Current Status
