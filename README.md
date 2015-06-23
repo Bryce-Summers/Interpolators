@@ -40,7 +40,7 @@ The user can modify the options by clicking on the buttons on the right hand sid
 Exportation of function code to Processing 3.
 --------------
 
-Press the big "Go" Button.
+Press the big "GENERATE CODE" Button.
 
 
 Current Visual appearance
