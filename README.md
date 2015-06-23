@@ -3,7 +3,10 @@ A Processing 3.0a5 Tool that extends the work of Golan Levin's pattern master pr
 
 Please see: https://github.com/golanlevin/Pattern_Master
 
-Warning: this too only works with processing version 3.0a5, we will update it to comply with the upcoming released versions of proccessing when support for PApplet type code is again availible.
+Warning
+----
+
+This too only works with processing version 3.0a5, we will update it to comply with the upcoming released versions of proccessing when support for PApplet type code is again availible.
 
 Features
 -----
