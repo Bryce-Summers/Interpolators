@@ -1,7 +1,9 @@
 # Interpolators
-A Processing 3 Tool that extends the work of Golan Levin's pattern master project.
+A Processing 3.0a5 Tool that extends the work of Golan Levin's pattern master project.
 
 Please see: https://github.com/golanlevin/Pattern_Master
+
+Warning: this too only works with processing version 3.0a5, we will update it to comply with the upcoming released versions of proccessing when support for PApplet type code is again availible.
 
 Features
 -----
@@ -54,3 +56,5 @@ Proccessing 3 Sketches will display mysterious errors regarding '(' and ')' if y
 If the Tool seems to be drawing at an offset to the window, try resizing the window and the problem should go away.
 
 Do not switch between java mode and python mode when using this tool and this tool only works in java mode.
+
+Never open more than one instance of the Interpolation Curve Tool.
