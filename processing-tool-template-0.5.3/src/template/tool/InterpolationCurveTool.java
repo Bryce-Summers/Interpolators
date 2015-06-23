@@ -28,7 +28,7 @@ package template.tool;
 import processing.app.*;
 import processing.app.tools.*;
    
-public class Interpolators implements Tool
+public class InterpolationCurveTool implements Tool
 {
  
 	// when creating a tool, the name of the main class which implements Tool
@@ -52,7 +52,7 @@ public class Interpolators implements Tool
 	{
 	    return "Interpolation Curves";
 	}
- 
+	
  }
 
 

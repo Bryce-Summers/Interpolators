@@ -19,6 +19,7 @@ public class DisplayFrame extends javax.swing.JFrame {
         // Initialize and start the Modular Sketches.
 
         final gui_mainControls main_controls = new gui_mainControls();
+        
         main_controls.init(); // Needs to go first.        
         
         panel.add(main_controls);

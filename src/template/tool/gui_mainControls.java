@@ -23,10 +23,10 @@ import java.util.Iterator;
 import java.util.List;
 
 // Imports for PDF, to save a vector graphic of the function.
-//import processing.pdf.*;
+// import processing.pdf.*;
 
 // FIXME : Clean up the dependency injection code and make it more robust.
-// FIXME : Improve the user interface.
+
 // Give the user the option of injecting only a parameter comment.
 
 public class gui_mainControls extends PApplet {
@@ -64,11 +64,11 @@ public class gui_mainControls extends PApplet {
 	float yoffset = margin0 + bandTh + margin1 + 69 + 3;
 	float xoffset2 = xoffset - 78;
 	
-	
-	float param_a = 0.25f;
-	float param_b = 0.75f;
-	float param_c = 0.75f;
-	float param_d = 0.25f;
+	// Magical Numbers.
+	float param_a = 0.24659f; //.25!
+	float param_b = 0.7534f;  //.75!
+	float param_c = 0.7534f;  //.75!
+	float param_d = 0.24659f; //.25!
 	int   param_n = 3;
 	float f_n = param_n;
 
@@ -158,6 +158,10 @@ public class gui_mainControls extends PApplet {
 	gui_functionSelection selector;
 	
 	gui_mainControls me = this;
+	
+	
+	// FIXME: find a way to properly computer the circular fillet circle x and y.
+	boolean weHaveFoundAWorkAroundForCuteCircularFilletParameters = false;
 	
 	public void addSelectionControls(gui_functionSelection selector)
 	{
@@ -264,8 +268,13 @@ public class gui_mainControls extends PApplet {
 		// Scrolls the index up.
 		public void index_increment()
 		{
+			
+			int len = indices.size();
+			
 			current_index = (current_index + 1) % indices.size();
 			FUNCTIONMODE = get(current_index);
+			
+			fixScrollbar();
 		}
 		
 		// Scrolls the index down.
@@ -274,11 +283,18 @@ public class gui_mainControls extends PApplet {
 			int len = indices.size();
 			current_index = (current_index + len - 1) % len; 
 			FUNCTIONMODE = get(current_index);
+			
+			fixScrollbar();
 		}
 		
 		public void index_fix()
 		{
 			FUNCTIONMODE = get(current_index);
+		}
+
+		public void fixScrollbar() {
+			
+			scroll.setVal(current_index*1.0f/indices.size());
 		}
 	}
 	
@@ -506,10 +522,12 @@ public class gui_mainControls extends PApplet {
 	  
 	  if (key == CODED) { 
 	    if ((keyCode == DOWN) || (keyCode == RIGHT)) { 
-	      FUNCTIONMODE = (FUNCTIONMODE+1)%nFunctions;
+	      f_group group = function_groups[group_index];
+	      group.index_increment();
 	    } 
 	    else if ((keyCode == UP) || (keyCode == LEFT)) { 
-	      FUNCTIONMODE = (FUNCTIONMODE-1+nFunctions)%nFunctions;
+		  f_group group = function_groups[group_index];
+		  group.index_decrement();
 	    }
 	  } 
 	  if (key=='P') {
@@ -571,8 +589,6 @@ public class gui_mainControls extends PApplet {
 		HashSet<String> names_done = new HashSet<String>();
 		names_done.add(methodName);
 		text.append(function_text);
-
-		// FIXME : Helper functions should not have input comments.
 
 		while(true)
 		{
@@ -898,6 +914,8 @@ public class gui_mainControls extends PApplet {
 	  //size (scrW, scrH);
 	  size(room_w, room_h);
 	  
+	  frameRate(30);
+	  
 	  initHistories();
 	  
 	  introspect();
@@ -906,8 +924,9 @@ public class gui_mainControls extends PApplet {
 	  
 	  setup_buttons();
 	  
-	  setup_scrollbars();  
+	  
 	  setupGroups();
+	  setup_scrollbars();
 
 	}
 	
@@ -932,20 +951,25 @@ public class gui_mainControls extends PApplet {
 		
 		parameter_scroll_a = new HScrollbar(x, y, width, height, l);
 		y += y_inc;
+		parameter_scroll_a.setVal(param_a);
 		
 		parameter_scroll_b = new HScrollbar(x, y, width, height, l);
 		y += y_inc;
+		parameter_scroll_b.setVal(param_b);
 		
 		parameter_scroll_c = new HScrollbar(x, y, width, height, l);
 		y += y_inc;
+		parameter_scroll_c.setVal(param_c);
 		
 		parameter_scroll_d = new HScrollbar(x, y, width, height, l);
 		y += y_inc;
+		parameter_scroll_d.setVal(param_d);
 		
 		parameter_scroll_n = new HScrollbar(x, y, width, height, l);
 		y += y_inc;
 		parameter_scroll_n.setVal((param_n - f_n_min)*1.0f/(f_n_max - f_n_min));
 		
+		function_groups[0].fixScrollbar();
 	}
 	
 	// Orders Methods based on their name strings.
@@ -969,6 +993,11 @@ public class gui_mainControls extends PApplet {
 		  }
 		  
 		  function_groups[0].name("All");
+		  
+		  // Index of Double exponential sigmoid in alphabetical order.
+		  function_groups[0].current_index = 32;
+		  
+		  
 		  function_groups[1].name("Sigmoid");
 		  function_groups[2].name("Ogee");
 		  function_groups[3].name("EaseIn");
@@ -1051,11 +1080,13 @@ public class gui_mainControls extends PApplet {
 		  
 		  // Setup the global variables correctly.
 		  fixFUNCTIONMODE();
+  
+		  
 	}
 	
 	public void fixFUNCTIONMODE()
 	{
-		// Synchronize the globlal index with the correct index.
+		// Synchronize the global index with the correct index.
 		function_groups[group_index].index_fix();		
 	}
 
@@ -1079,6 +1110,7 @@ public class gui_mainControls extends PApplet {
 			{
 				function_groups[group_index].index_increment();
 				up--;
+				
 			}
 			
 			int down = ceil(-e);
@@ -1154,10 +1186,13 @@ public class gui_mainControls extends PApplet {
 		if(inFunctionSelectionBounds())
 		{
 			f_group group = function_groups[group_index];
-			FUNCTIONMODE = constrain((mouseY + selection_line_h/2 - getSelectionYStart()) / selection_line_h,
+			int index = constrain((mouseY + selection_line_h/2 - getSelectionYStart()) / selection_line_h,
 										0, group.size() - 1);
-			// FUNCTIONMODE = 
-			FUNCTIONMODE = group.get(FUNCTIONMODE);
+			
+			group.current_index = index; 
+			FUNCTIONMODE = group.get(index);
+			
+			group.fixScrollbar();
 			
 			return;
 		}
@@ -1395,6 +1430,10 @@ boolean inFunctionSelectionBounds()
 			if(index == FUNCTIONMODE)
 			{
 				textFont(Font_bold);
+				fill(180, 240, 190);// Green.
+				noStroke();
+				rect(selection_text_x - 7, y - selection_line_h*.75f, scroll.xpos - selection_text_x, selection_line_h);
+				fill(0);
 			}
 			else
 			{
@@ -1757,17 +1796,22 @@ boolean inFunctionSelectionBounds()
 	}
 
 
+	int time = 0;
+	
 	//-----------------------------------------------------
 	void drawNoiseHistories() {
 
+	  time++;
+	  int f_time = time*20;
+	  
 	  // update with the latest incoming values
 	  int nData = (int)xscale;
-	  float noiseVal = noise(millis()/ (nData/2.0f));
-	  float cosVal   = 0.5f + (0.5f * cos(PI * millis()/animationConstant));
+	  float noiseVal = noise(f_time/ (nData/2.0f));
+	  float cosVal   = 0.5f + (0.5f * cos(PI * f_time/animationConstant));
 	  
 	  float ac = animationConstant;
 	  
-	  float tv = (((int)(millis()/ac))%2 == 0) ? (millis()%ac) : (ac - (millis()%ac));
+	  float tv = (((int)(f_time/ac))%2 == 0) ? (f_time%ac) : (ac - (f_time%ac));
 	  float triVal = 1.0f - tv/ac;
 	  
 	  
@@ -1908,17 +1952,15 @@ boolean inFunctionSelectionBounds()
 	  case 4:
 	    if (methodName.equals("function_CircularFillet")) {
 	    	
-	    	// FIx this in time;
-	    	if(true)
+	    	if(!weHaveFoundAWorkAroundForCuteCircularFilletParameters)
 	    	{
 	    		break;
 	    	}
 	    	
-	    /*
+	    	/*
 	      x = xoffset + arcCenterX * xscale;
 	      y = yoffset + (1-arcCenterY) * yscale;
-	      float d = 2.0 * arcRadius * xscale;
-	     	    	
+	      float d = 2.0 * arcRadius * xscale; 	    	
 	      ellipseMode(CENTER);
 	      ellipse(x, y, d, d);
 	      */
@@ -4247,7 +4289,6 @@ boolean inFunctionSelectionBounds()
 	  float A = (1-b)/(1-a) - (b/a);
 	  float B = (A*(a*a)-b)/a;
 	  float y = A*(x*x) - B*(x);
-	  y = constrain(y, 0,1); 
 	  
 	  return y;
 	}
