@@ -6,7 +6,7 @@ Please see: https://github.com/golanlevin/Pattern_Master
 Warning
 ----
 
-This too only works with processing version 3.0a5, we will update it to comply with the upcoming released versions of proccessing when support for PApplet type code is again availible.
+This tool only works with processing version 3.0a5, we will update it to comply with the upcoming released versions of proccessing when support for PApplet type code is again availible.
 
 Features
 -----
